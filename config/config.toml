@@ -1,0 +1,3 @@
+[paths]
+gearshifft_bin_dir = "../gearshifft/build/release/gearshifft/" # Location of gearshifft_<Implementation> binaries
+output_dir = "output/" # default place to store program outputs (plots etc.)
