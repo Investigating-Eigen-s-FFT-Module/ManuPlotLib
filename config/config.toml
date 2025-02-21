@@ -1,3 +1,5 @@
 [paths]
-gearshifft_bin_dir = "../gearshifft/build/release/gearshifft/" # Location of gearshifft_<Implementation> binaries
-output_dir = "output/" # default place to store program outputs (plots etc.)
+gearshifft_root    = "../gearshifft"             # root of gearshifft repo
+gearshifft_bin_dir = "build/release/gearshifft/" # location of gearshifft_<Implementation> binaries relative to root
+output_dir         = "output/"                   # default place to store program outputs (plots etc.)
+cache_dir          = ".cache/"                   # default place to cache information

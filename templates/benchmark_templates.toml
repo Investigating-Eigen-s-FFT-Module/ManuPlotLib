@@ -1,0 +1,15 @@
+[default] # TODO: change gearshifft CMakePresets to be more flexible, e.g. compiler and threading choice etc.
+inherits       = "release" # base preset in gearshifft/CMakePresets.json
+# Build Settings
+nr_warmup      = 2
+nr_warm_runs   = 10
+error_bound    = -1 # -1 for dynamic error bound within gearshifft
+dump_frequency = 1  # Number of benchmarks results to collect before dumping to backup file
+llc_mib        = 32 # Size of the processor's last level cache in MiB
+cl_mb          = 64 # Size of the processor's cache Lines in B
+# Runtime Settings
+extents        = [] # gearshifft extents files (row-wise csv)
+verbose        = false
+# device = "cpu" not needed for now (gpu|cpu|acc|<ID>)
+nr_devices     = 0 # parallelism if supported, 0 = all
+
