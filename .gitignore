@@ -1,1 +1,4 @@
-output # default output directory
+# default output directorycache
+output/
+# default cache directory
+.cache/
