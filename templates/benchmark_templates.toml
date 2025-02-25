@@ -7,9 +7,9 @@ error_bound    = -1 # -1 for dynamic error bound within gearshifft
 dump_frequency = 1  # Number of benchmarks results to collect before dumping to backup file
 llc_mib        = 32 # Size of the processor's last level cache in MiB
 cl_mb          = 64 # Size of the processor's cache Lines in B
+cache_vars     = {} # Any other CMake cacheVariables as Pairs, e.g. {CMAKE_C_COMPILER = "gcc", ...}
 # Runtime Settings
 extents        = [] # gearshifft extents files (row-wise csv)
 verbose        = false
 # device = "cpu" not needed for now (gpu|cpu|acc|<ID>)
-nr_devices     = 0 # parallelism if supported, 0 = all
-
+nr_devices     = 0  # parallelism if supported, 0 = all

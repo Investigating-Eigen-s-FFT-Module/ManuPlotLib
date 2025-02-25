@@ -41,8 +41,8 @@ function parse_commandline()
             group = :actions
         "--benchmark-template", "-b"
             help = "Pick a benchmark template from templates/benchmark_templates.toml"
-            arg_type = Symbol
-            default = :default
+            arg_type = String
+            default = "default"
             group = :benchmark_opt
         "--plot", "-P"
             help = "Create a new plot"
@@ -50,8 +50,8 @@ function parse_commandline()
             group = :actions
         "--plot-template", "-p"
             help = "Pick a plot template from templates/plot_templates.toml"
-            arg_type = Symbol
-            default = :default
+            arg_type = String
+            default = "default"
             group = :plot_opt
         "--benchmark-id", "-i" # todo: not sure yet how to ID benchmarks, revise
             help = "id of benchmark to plot (defaults to newest generated)"
@@ -74,9 +74,5 @@ function parse_commandline()
             arg_type = String
             default = default_paths["cache_dir"]
     end
-
-    args = parse_args(s)
-    # if !s["--benchmark"] && (s[""]
-    @show args
-    return args
+    return parse_args(s)
 end

@@ -1,5 +1,5 @@
 [paths]
-gearshifft_root    = "../gearshifft"             # root of gearshifft repo
+gearshifft_root    = "../gearshifft"             # root of gearshifft repo relative to GearshifftEvaluation root dir
 gearshifft_bin_dir = "build/release/gearshifft/" # location of gearshifft_<Implementation> binaries relative to root
 output_dir         = "output/"                   # default place to store program outputs (plots etc.)
 cache_dir          = ".cache/"                   # default place to cache information
