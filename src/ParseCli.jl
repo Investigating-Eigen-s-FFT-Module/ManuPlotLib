@@ -61,10 +61,6 @@ function parse_commandline()
             help = "root directory of gearshifft repo"
             arg_type = String
             default = default_paths["gearshifft_root"]
-        "--gearshifft-binaries"
-            help = "location of gearshifft binaries (relative to gearshifft root)"
-            arg_type = String
-            default = default_paths["gearshifft_bin_dir"]
         "--output-dir", "-o"
             help = "location of program results (benchmarks/plots)"
             arg_type = String
