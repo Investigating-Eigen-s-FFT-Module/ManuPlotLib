@@ -8,7 +8,6 @@ function run_benchmark(fft_implementation::Symbol, build_hash::String, benchmark
     time = "$(now())"
     toml_data = TOML.parsefile(benchmark_templates_dir)
     template = get_template(toml_data, benchmark_template)
-    @show template
     template_hash = get_template_hash(benchmark_templates_dir, benchmark_template)
     output_csv =  join([template_hash, "-" , time, ".csv"])
 
@@ -44,7 +43,7 @@ function run_benchmark(fft_implementation::Symbol, build_hash::String, benchmark
         "./$executable",
         "-f", join(extents, " "),
         "-o", output_csv,
-        "-t", time,
+        "-t", join([benchmark_template, time], "@"),
         verbose ? "-v" : nothing,
         "-n", "$nr_devices"
     ]
