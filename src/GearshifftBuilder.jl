@@ -39,15 +39,15 @@ function generate_cmake_userpreset(toml_template_file::String, preset_name::Stri
                 preset_config["cache_vars"])
     end
     
-    # Add hash key as comment for unique id
-    hash_key = get_hash(new_preset)
-    push!(new_preset, "\$comment" => hash_key)
-    
     # Convert all cache variables to String
     for (key, value) in new_preset["cacheVariables"]
         new_preset["cacheVariables"][key] = string(value)
     end
     
+    # Add hash key as comment for unique id
+    hash_key = get_hash(new_preset)
+    push!(new_preset, "\$comment" => hash_key)
+
     # Write to CMakeUserPresets.json
     output_path = joinpath(path, "CMakeUserPresets.json")
 
@@ -98,33 +98,11 @@ function generate_cmake_userpreset(toml_template_file::String, preset_name::Stri
     return hash_key
 end
 
-function run_command_from_cache(command::Cmd, log_file::AbstractString, path::AbstractString)
-    mkpath(dirname(log_file))
-    open(log_file, "w") do log
-        try
-            proc = run(pipeline(
-                Cmd(command, dir=path),
-                stdout=log,
-                stderr=log
-            ))
-            status = proc.exitcode  # Get the actual exit code
-            if status != 0
-                @error "'$command' failed, exit code $status. Check $log_file for details."
-                return false
-            end
-            return true
-        catch e
-            @error "Failed to run '$command'" exception=e
-            return false
-        end
-    end
-end
-
 function cmake_config(preset_name::String, path::String, log_path::String="$(dirname(path))")
     # Run CMake
     @info "Configuring CMake with benchmark template '$preset_name'"
     log_file = joinpath(log_path, "cmake_config_logs", "$(preset_name)-$(now()).log")
-    run_command_from_cache(`cmake --preset $preset_name`, log_file, path)
+    run_command_from_path(`cmake --preset $preset_name`, log_file, path)
 end
 
 function cmake_build(preset_name::String, path::String, bin_path::String, log_path::String="$(dirname(path))")
@@ -138,25 +116,24 @@ function cmake_build(preset_name::String, path::String, bin_path::String, log_pa
     @info "Building with benchmark template '$preset_name'"
     log_file  = joinpath(log_path, "cmake_build_logs", "$(preset_name)-$(now()).log")
 
-    run_command_from_cache(`cmake --build build/$preset_name`, log_file, path)
-
-    cp(joinpath(path, "build", preset_name, "gearshifft"), bin_path)
+    run_command_from_path(`cmake --build build/$preset_name`, log_file, path)
+    cp(joinpath(path, "build", preset_name, "gearshifft"), bin_path, force=true)
 end
 
 function build(benchmark_template::String, gearshifft_root::AbstractString,
-               cache_path::AbstractString, benchmark_templates_path::AbstractString)
+               cache_dir::AbstractString, benchmark_templates_dir::AbstractString)
     preset_name = benchmark_template
 
     # Symlink gearshifft root if not already done
-    gearshifft_path = joinpath(cache_path, "gearshifft")
+    gearshifft_path = joinpath(cache_dir, "gearshifft")
     if !isdir(gearshifft_path)
         @info "Creating symlink to '$gearshifft_root'"
         symlink(gearshifft_root, gearshifft_path, dir_target = true)
     end
 
-    hash_key = generate_cmake_userpreset(benchmark_templates_path, preset_name, gearshifft_path)
+    hash_key = generate_cmake_userpreset(benchmark_templates_dir, preset_name, gearshifft_path)
     cmake_config(preset_name, gearshifft_path)
-    cmake_build(preset_name, gearshifft_path, joinpath(cache_path, hash_key))
+    cmake_build(preset_name, gearshifft_path, joinpath(cache_dir, hash_key))
 
     return hash_key
 end
