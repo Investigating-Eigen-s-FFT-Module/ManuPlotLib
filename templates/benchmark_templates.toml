@@ -1,5 +1,5 @@
-[default] # TODO: change gearshifft CMakePresets to be more flexible, e.g. compiler and threading choice etc.
-inherits       = "release" # base preset in gearshifft/CMakePresets.json
+[default]
+cmake_inherits = ["release"] # base preset in gearshifft/CMakePresets.json
 # Build Settings
 nr_warmup      = 2
 nr_warm_runs   = 10
@@ -13,3 +13,12 @@ extents        = [] # gearshifft extents files (row-wise csv)
 verbose        = false
 # device = "cpu" not needed for now (gpu|cpu|acc|<ID>)
 nr_devices     = 0  # parallelism if supported, 0 = all
+
+[test]
+inherits = "default"
+extents = ["test.conf"]
+nr_warmup = 3
+
+[test-verbose]
+inherits = "test"
+verbose = true

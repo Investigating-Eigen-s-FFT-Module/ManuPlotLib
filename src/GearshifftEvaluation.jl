@@ -19,7 +19,7 @@ function main()
     mkpath(cache_dir)
     mkpath(output_dir)
     if args["benchmark"]
-        println("Running benchmark with implementation: $(args["implementation"])")
+        @info "Running benchmark with implementation: $(args["implementation"])"
 
         build_hash = build(args["benchmark_template"], gearshifft_root, cache_dir, benchmark_templates_dir)
         

@@ -7,12 +7,14 @@ function run_benchmark(fft_implementation::Symbol, build_hash::String, benchmark
     # get benchmark template arguments
     time = "$(now())"
     toml_data = TOML.parsefile(benchmark_templates_dir)
-    template = get(toml_data, benchmark_template, nothing)
+    template = get_template(toml_data, benchmark_template)
+    @show template
     template_hash = get_template_hash(benchmark_templates_dir, benchmark_template)
     output_csv =  join([template_hash, "-" , time, ".csv"])
 
-    isnothing(template) && error("Benchmark template '$preset_name' not found in TOML file")
     extents::AbstractArray = template["extents"]
+    (length(extents) == 0) && error("Benchmark template '$benchmark_template' doesn't have any extents files specified")
+
     verbose::Bool          = template["verbose"]
     nr_devices::Integer    = template["nr_devices"]
 
