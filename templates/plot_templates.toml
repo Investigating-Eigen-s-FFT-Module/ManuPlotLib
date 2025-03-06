@@ -1,0 +1,25 @@
+[base]
+# Basics
+x_scale = "linear"                  # Possible values: "linear", "log"
+y_scale = "linear"                  # Possible values: "linear", "log"
+x_label = "n"                       # Label for the x-axis
+y_label = "[ms]"                    # Label for the y-axis
+
+# Benchmark output selection
+benchmark_templates = []           # List sets of benchmarks to compare, e.g. ["benchA", "benchB"]
+csv_count_per_benchmark = 1        # Number of CSV files to include for each benchmark template
+stages = ["FFT", "iFFT", "Total"]  # Which stages to plot ("Allocation","PlanInitFwd","PlanInitInv","Upload",
+                                   # FFT","iFFT","Download","PlanDestroy","Total")
+
+# Data processing
+combine_same_benchmark_data = true        # Use true to merge data from the same benchmark into one curve
+aggregation_function = "mean"             # Possible choices: "mean", "median", "min", "max"
+error_bar_method = "std_dev"              # Possible choices: "std_dev", "std_err", "quantiles"
+y_transform = "none"                      # Optional transform of the measured data on the y-axis
+                                          # (currently just 'flops_per_ms' to compute FFT peak performance)
+
+[test]
+inherits = "base"
+benchmark_templates = ["test-fftw"]
+csv_count_per_benchmark = 2
+combine_same_benchmark_data = false
