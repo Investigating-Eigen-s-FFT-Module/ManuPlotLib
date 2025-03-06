@@ -10,25 +10,26 @@ include("Plotting.jl")
 function main()
     args = parse_commandline()
     root = joinpath(@__DIR__, "..")
-    benchmark_templates_dir = joinpath(root, "templates", "benchmark_templates.toml")
+    benchmark_templates_path = joinpath(root, "templates", "benchmark_templates.toml")
     cache_dir = joinpath(root, args["cache_dir"])
     gearshifft_root = joinpath(root, args["gearshifft_root"])
     output_dir = joinpath(root, args["output_dir"])
-    fft_implementation = args["implementation"]
+    benchmark_template_name = args["benchmark_template"]
+    plot_template_name = args["plot_template"]
     
     mkpath(cache_dir)
     mkpath(output_dir)
-    if args["benchmark"]
-        @info "Running benchmark with implementation: $(args["implementation"])"
+    if !isnothing(benchmark_template_name)
+        benchmark_template = get_template(TOML.parsefile(benchmark_templates_path), benchmark_template_name)
 
-        build_hash = build(args["benchmark_template"], gearshifft_root, cache_dir, benchmark_templates_dir)
-        
-        run_hash = run_benchmark(fft_implementation, build_hash, args["benchmark_template"],
-                                 gearshifft_root, cache_dir, benchmark_templates_dir, output_dir)
+        build_hash = build(benchmark_template, benchmark_template_name, gearshifft_root, cache_dir)
+        tag = get(args, "benchmark_tag", nothing)
+
+        run_hash = run_benchmark(benchmark_template, benchmark_template_name, build_hash,
+                                 gearshifft_root, cache_dir, output_dir, tag)
     end
     
-    if args["plot"]
-        println("Creating plot for implementation: $(args["implementation"])")
+    if !isnothing(plot_template_name)
         # Add plotting logic here
     end
 end

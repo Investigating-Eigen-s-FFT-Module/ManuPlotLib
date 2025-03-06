@@ -23,40 +23,26 @@ function parse_commandline()
     )
     s.autofix_names = true
 
-    add_arg_group!(s, "required arguments", :req_arg, false, required = true)
     add_arg_group!(s, "main actions", :actions, false, required = true)
     add_arg_group!(s, "benchmark options", :benchmark_opt, false)
     add_arg_group!(s, "plotting options", :plot_opt, false)
 
     @add_arg_table! s begin
-        "--implementation", "-I"
-            help = "Choose FFT implementation"
-            required = true
-            arg_type = Symbol
-            range_tester = in(gearshifft_impl)
-            group = :req_arg
-        "--benchmark", "-B"
-            help = "Run a new benchmark"
-            action = :store_true
-            group = :actions
         "--benchmark-template", "-b"
-            help = "Pick a benchmark template from templates/benchmark_templates.toml"
+            help = "Run a benchmark template from templates/benchmark_templates.toml"
             arg_type = String
-            default = "default"
-            group = :benchmark_opt
-        "--plot", "-P"
-            help = "Create a new plot"
-            action = :store_true
+            default = nothing
             group = :actions
         "--plot-template", "-p"
-            help = "Pick a plot template from templates/plot_templates.toml"
+            help = "Run a plot template from templates/plot_templates.toml"
             arg_type = String
-            default = "default"
-            group = :plot_opt
-        "--benchmark-id", "-i" # todo: not sure yet how to ID benchmarks, revise
-            help = "id of benchmark to plot (defaults to newest generated)"
-            default = :default
-            group = :plot_opt
+            default = nothing
+            group = :actions
+        "--benchmark-tag", "-t" 
+            help = "Specify a custom tag in the output csv (line 1); Default is benchmark template hash and datetime"
+            group = :benchmark_opt
+        "--plot-tag", "-T"
+            help = "Specify a regex pattern to filter output csv files by their tag (in line 1 of csv)"
         "--gearshifft-root"
             help = "root directory of gearshifft repo"
             arg_type = String
@@ -70,5 +56,12 @@ function parse_commandline()
             arg_type = String
             default = default_paths["cache_dir"]
     end
-    return parse_args(s)
+    args = try
+        parse_args(s)
+    catch e
+        @error e.text
+        @info "See ./gearshifft_evaluation -h for usage details"
+        exit(1)
+    end
+    return args
 end

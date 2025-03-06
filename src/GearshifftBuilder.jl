@@ -1,4 +1,3 @@
-using TOML
 using JSON3
 using OrderedCollections
 using SHA
@@ -6,8 +5,7 @@ using Dates
 
 get_hash(preset::OrderedDict) = bytes2hex(sha256(JSON3.write(preset)))
 
-function cmake_preset_from_template(toml_data::Dict, name::String)
-    template = get_template(toml_data, name)
+function cmake_preset_from_template(template::Dict, name::String)
     new_preset = 
         OrderedDict(
             "inherits" => template["cmake_inherits"],
@@ -39,15 +37,14 @@ function cmake_preset_from_template(toml_data::Dict, name::String)
     return new_preset
 end
 
-function generate_cmake_userpreset(toml_template_file::String, benchmark_template::String, path::String)
+function generate_cmake_userpreset(template::Dict, name::String, path::String)
     # Check if CMakePresets.json exists in path already
     if !isfile(joinpath(path, "CMakePresets.json"))
         @error "Tried to add a CMake user preset to $path but CMakePresets.json from gearshifft root does not exist"
     end
 
     # Create CMake preset structure
-    toml_data = TOML.parsefile(toml_template_file)
-    new_preset = cmake_preset_from_template(toml_data, benchmark_template)
+    new_preset = cmake_preset_from_template(template, name)
     new_preset_hash = new_preset["name"]
 
     # Write to CMakeUserPresets.json
@@ -61,7 +58,7 @@ function generate_cmake_userpreset(toml_template_file::String, benchmark_templat
             # Check if this preset already exists
             if haskey(existing_presets, "configurePresets")
                 if any(preset -> preset["name"] == new_preset_hash, existing_presets["configurePresets"])
-                    @info "Found suitable preset for '$benchmark_template' in CMakeUserPresets.json"
+                    @info "Found suitable preset for '$name' in CMakeUserPresets.json"
                 else
                     push!(existing_presets["configurePresets"], new_preset)
                 end
@@ -118,10 +115,7 @@ function cmake_build(preset_name::String, preset_hash::String, cache_dir::String
     cp(joinpath(path, "build", preset_hash, "gearshifft"), bin_path, force=true)
 end
 
-function build(benchmark_template::String, gearshifft_root::AbstractString,
-               cache_dir::AbstractString, benchmark_templates_dir::AbstractString)
-    preset_name = benchmark_template
-
+function build(template::Dict, name::String, gearshifft_root::AbstractString, cache_dir::AbstractString)
     # Symlink gearshifft root if not already done
     gearshifft_path = joinpath(cache_dir, "gearshifft")
     if !isdir(gearshifft_path)
@@ -129,9 +123,9 @@ function build(benchmark_template::String, gearshifft_root::AbstractString,
         symlink(gearshifft_root, gearshifft_path, dir_target = true)
     end
 
-    preset_hash = generate_cmake_userpreset(benchmark_templates_dir, preset_name, gearshifft_path)
-    cmake_config(preset_name, preset_hash, gearshifft_path)
-    cmake_build(preset_name, preset_hash, cache_dir, gearshifft_path)
+    preset_hash = generate_cmake_userpreset(template, name, gearshifft_path)
+    cmake_config(name, preset_hash, gearshifft_path)
+    cmake_build(name, preset_hash, cache_dir, gearshifft_path)
 
     return preset_hash
 end

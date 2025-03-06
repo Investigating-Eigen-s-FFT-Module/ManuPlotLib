@@ -49,12 +49,11 @@ function run_command_from_path(command::Cmd, log_file::AbstractString, path::Abs
     end
 end
 
-function get_template_hash(toml_path::AbstractString, template_name::String)
-    toml_data = TOML.parsefile(toml_path)
-    template = get(toml_data, template_name, nothing)
-    if isnothing(template)
-        error("Template '$template_name' not found in TOML file")
-    end
+function get_template_hash(template::Dict, name::String)
     template_str = sprint(show, template)
-    return bytes2hex(sha256(template_str))
+    return bytes2hex(
+        sha256(
+            join([template_str, name])
+        )
+    )
 end

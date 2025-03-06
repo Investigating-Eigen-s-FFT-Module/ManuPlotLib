@@ -14,11 +14,7 @@ verbose        = false
 # device = "cpu" not needed for now (gpu|cpu|acc|<ID>)
 nr_devices     = 0  # parallelism if supported, 0 = all
 
-[test]
+[test-fftw]
 inherits = "default"
+implementation = "fftw"
 extents = ["test.conf"]
-nr_warmup = 3
-
-[test-verbose]
-inherits = "test"
-verbose = true

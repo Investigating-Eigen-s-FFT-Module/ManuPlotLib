@@ -1,18 +1,18 @@
-using TOML
 using SHA
 
-function run_benchmark(fft_implementation::Symbol, build_hash::String, benchmark_template::String,
+function run_benchmark(template::Dict, name::String, build_hash::String,
                        gearshifft_root::AbstractString, cache_dir::AbstractString,
-                       benchmark_templates_dir::AbstractString, output_dir::AbstractString)
-    # get benchmark template arguments
+                       output_dir::AbstractString, tag=nothing)
     time = "$(now())"
-    toml_data = TOML.parsefile(benchmark_templates_dir)
-    template = get_template(toml_data, benchmark_template)
-    template_hash = get_template_hash(benchmark_templates_dir, benchmark_template)
+    template_hash = get_template_hash(template, name)
     output_csv =  join([template_hash, "-" , time, ".csv"])
 
+    fft_implementation = get(template, "implementation", nothing)
+    isnothing(fft_implementation) && error("Benchmark template '$name' does not specify an FFT implementation")
+    @info "Running benchmark with implementation '$fft_implementation'"
+
     extents::AbstractArray = template["extents"]
-    (length(extents) == 0) && error("Benchmark template '$benchmark_template' doesn't have any extents files specified")
+    (length(extents) == 0) && error("Benchmark template '$name' doesn't have any extents files specified")
 
     verbose::Bool          = template["verbose"]
     nr_devices::Integer    = template["nr_devices"]
@@ -38,12 +38,12 @@ function run_benchmark(fft_implementation::Symbol, build_hash::String, benchmark
     end
 
     mkpath(joinpath(cache_dir, "benchmark_logs"))
-    log_file = joinpath(cache_dir, "benchmark_logs", "$(template_hash)-$time.log")
+    log_file = joinpath(cache_dir, "benchmark_logs", "$name-$template_hash-$time.log")
     base_args = [
         "./$executable",
         "-f", join(extents, " "),
         "-o", output_csv,
-        "-t", join([benchmark_template, time], "@"),
+        "-t", isnothing(tag) ? join([name, time], "@") : tag, # default tag is name and time in csv
         verbose ? "-v" : nothing,
         "-n", "$nr_devices"
     ]
