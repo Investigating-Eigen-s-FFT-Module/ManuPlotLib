@@ -17,6 +17,31 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
     verbose::Bool          = template["verbose"]
     nr_devices::Integer    = template["nr_devices"]
 
+    # translate following params to wildcard syntax
+    benchmarks_string = try
+        inplace::Bool          = template["inplace"]
+        outplace::Bool         = template["outplace"]
+        real::Bool             = template["real"]
+        complex::Bool          = template["complex"]
+        precision::String      = template["precision"]
+
+        benchmarks_string = "*/"
+        benchmarks_string *= (precision == "all" ? "*/*/" : "$precision/*/") # second '*' is extent, which is not specified
+        benchmarks_string *= (inplace && outplace ? "*_" : (inplace ? "Inplace_" : "Outplace_"))
+        benchmarks_string *= (real && complex ? "*" : (real ? "Real" : "Complex"))
+
+        if !(inplace || outplace)
+            throw(ArgumentError("Both inplace and outplace benchmarks set to false in benchmark template '$name'"))
+        elseif !(real || complex)
+            throw(ArgumentError("Both real and complex benchmarks set to false in benchmark template '$name'"))
+        end
+
+        benchmarks_string
+    catch e
+        @error "Failed to parse runtime benchmarks string"
+        showerror(stdout, e)
+        exit(1)
+    end 
     bin_path = joinpath(cache_dir, build_hash)
     executable = "gearshifft_$(fft_implementation)"
 
@@ -45,7 +70,8 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
         "-o", output_csv,
         "-t", isnothing(tag) ? join([name, time], "@") : tag, # default tag is name and time in csv
         verbose ? "-v" : nothing,
-        "-n", "$nr_devices"
+        "-n", "$nr_devices",
+        "-r", benchmarks_string
     ]
     filtered_args = Vector{String}(filter(x -> x !== nothing, base_args))
     command = Cmd(filtered_args)

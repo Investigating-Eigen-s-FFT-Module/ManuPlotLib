@@ -1,4 +1,4 @@
-[default]
+[base]
 cmake_inherits = ["release"] # base preset in gearshifft/CMakePresets.json
 # Build Settings
 nr_warmup      = 2
@@ -12,9 +12,18 @@ cache_vars     = {} # Any other CMake cacheVariables as Pairs, e.g. {CMAKE_C_COM
 extents        = [] # gearshifft extents files (row-wise csv)
 verbose        = false
 # device = "cpu" not needed for now (gpu|cpu|acc|<ID>)
-nr_devices     = 0  # parallelism if supported, 0 = all
+nr_devices     = 1  # parallelism if supported, 0 = all
+inplace        = true  # run inplace benchmarks
+outplace       = true  # run outplace benchmarks
+real           = true  # run r2c/c2r benchmarks
+complex        = true  # run c2c benchmarks
+precision      = "all" # which precisions to benchmark
+                       # (options depend on implementation, typically ("double"|"float"))
 
 [test-fftw]
-inherits = "default"
+inherits = "base"
 implementation = "fftw"
+outplace = false
+real = false
+precision = "float"
 extents = ["test.conf"]

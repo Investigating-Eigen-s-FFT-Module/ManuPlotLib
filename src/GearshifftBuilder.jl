@@ -6,7 +6,7 @@ using Dates
 get_hash(preset::OrderedDict) = bytes2hex(sha256(JSON3.write(preset)))
 
 function cmake_preset_from_template(template::Dict, name::String)
-    new_preset = 
+    new_preset = try
         OrderedDict(
             "inherits" => template["cmake_inherits"],
             "cacheVariables" => OrderedDict{String, Any}(
@@ -18,6 +18,11 @@ function cmake_preset_from_template(template::Dict, name::String)
                 "GEARSHIFFT_CACHE_LINE_SIZE_B" => template["cl_mb"]
             )
         )
+    catch e
+        @error "Benchmark template '$name' doesn't specify or inherit all build variables:"
+        showerror(stdout, e)
+        exit(1)
+    end
     # Merge additional cache variables if present
     if haskey(template, "cache_vars")
         merge!(new_preset["cacheVariables"], 
