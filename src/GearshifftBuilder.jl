@@ -105,12 +105,7 @@ end
 function cmake_build(preset_name::String, preset_hash::String, cache_dir::String,
                      path::String, log_path::String=cache_dir)
     bin_path = joinpath(cache_dir, preset_hash)
-    if isdir(bin_path)
-        @info "Found suitable build for benchmark template '$preset_name'. Skipping build"
-        return
-    else
-        mkpath(joinpath(bin_path))
-    end
+    mkpath(joinpath(bin_path))
     # Run Generator through CMake
     @info "Building with benchmark template '$preset_name'"
 

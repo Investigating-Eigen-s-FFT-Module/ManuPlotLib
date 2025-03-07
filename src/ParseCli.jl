@@ -43,6 +43,7 @@ function parse_commandline()
             group = :benchmark_opt
         "--plot-tag", "-T"
             help = "Specify a regex pattern to filter output csv files by their tag (in line 1 of csv)"
+            default = nothing
         "--gearshifft-root"
             help = "root directory of gearshifft repo"
             arg_type = String

@@ -23,7 +23,9 @@ precision      = "all" # which precisions to benchmark
 [test-fftw]
 inherits = "base"
 implementation = "fftw"
-outplace = false
-real = false
-precision = "float"
+inplace = false
 extents = ["test.conf"]
+
+[test-eigen-fftw]
+inherits = "test-fftw"
+implementation = "eigen_fftw"
