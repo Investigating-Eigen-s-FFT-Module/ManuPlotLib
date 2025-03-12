@@ -29,3 +29,13 @@ extents = ["test.conf"]
 [test-eigen-fftw]
 inherits = "test-fftw"
 implementation = "eigen_fftw"
+
+[test-fftw-outplace-complex-double]
+inherits = "test-fftw"
+inplace = false
+real = false
+precision = "double"
+
+[test-eigen-fftw-outplace-complex-double]
+inherits = "test-fftw-outplace-complex-double"
+implementation = "eigen_fftw"

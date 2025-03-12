@@ -95,7 +95,7 @@ function gather_data(template::Dict{String,Any}, output_dir::AbstractString, run
     data_list = first(data_list, min(num_files, length(data_list)))
 
     if template["combine_same_benchmark_data"]
-        return ([meta_list], [reduce(vcat, data_list)])
+        return (meta_list, [reduce(vcat, data_list)])
     else
         return (meta_list, data_list)
     end
