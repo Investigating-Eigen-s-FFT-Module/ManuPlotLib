@@ -1,5 +1,6 @@
 #!/usr/bin/env julia
 
+using Revise # as long as changes to GearshifftEvaluation happen
 using GearshifftEvaluation
 
 GearshifftEvaluation.main()
