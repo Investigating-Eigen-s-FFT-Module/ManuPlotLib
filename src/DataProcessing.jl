@@ -3,9 +3,10 @@ using DataFrames
 using Dates
 using Statistics
 
-function aggregate_data(template::Dict{String,Any}, data::DataFrame,
-                        gb_columns::AbstractArray, x_columns::AbstractArray,
-                        y_columns::AbstractArray)
+function aggregate_data(template::Dict{String,Any}, data::DataFrame)
+    x_columns = template["x_values"]
+    y_columns = template["y_values"]
+    gb_columns = vcat(x_columns, template["group_by_columns"])
     agg_fun = try
         Dict(
             "mean" => mean,
