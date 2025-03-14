@@ -4,7 +4,8 @@ using Dates
 using Statistics
 
 function aggregate_data(template::Dict{String,Any}, data::DataFrame,
-                        gb_columns::AbstractArray, columns::AbstractArray)
+                        gb_columns::AbstractArray, x_columns::AbstractArray,
+                        y_columns::AbstractArray)
     agg_fun = try
         Dict(
             "mean" => mean,
@@ -20,8 +21,9 @@ function aggregate_data(template::Dict{String,Any}, data::DataFrame,
     error_method = try
         Dict(
             "std_dev" => std,
-            "quantiles" => quantile,
-            "max_dev" => x -> maximum(abs.(x - mean(x))),
+            "quantiles" => y -> quantile(y, template["quantile_high"]) -
+                quantile(y, template["quantile_low"]),
+            "max_dev" => y -> maximum(abs.(y .- mean(y))),
             "none" => nothing
         )[template["error_bar_method"]]
     catch e
@@ -29,19 +31,44 @@ function aggregate_data(template::Dict{String,Any}, data::DataFrame,
         exit(1)
     end
 
-    grouped_df = groupby(data, gb_columns)
-    
+    x_transform = try
+        Dict(
+            "B_to_MiB" =>  x -> x * 2e-10,
+            "none" => identity
+        )[template["x_transform"]]
+    catch e
+        @error "Invalid x transform method: '$(template["x_transform"])'" e
+        exit(1)
+    end
+
+    y_transform = try
+        Dict(
+            "fft_perf" =>  (x, y) -> 5. * x * log(x) / y,
+            "none" => identity
+        )[template["y_transform"]]
+    catch e
+        @error "Invalid y transform method: '$(template["y_transform"])'" e
+        exit(1)
+    end
+
     transformations = []
-    for col in columns
-
-        push!(transformations, col => agg_fun => col * "_" * template["aggregation_function"])
-
+    combinations = []
+    for ycol in y_columns
+        for xcol in x_columns
+            push!(transformations, [xcol, ycol] => ByRow(y_transform) => ycol)
+            push!(transformations, xcol => x_transform => xcol)
+        end
+        push!(combinations, ycol => agg_fun => ycol)
+        
         if !isnothing(error_method)
-            push!(transformations, col => error_method => col * "_" * template["error_bar_method"])
+            push!(combinations, ycol => error_method => ycol * "_" * template["error_bar_method"])
         end
     end
-    agg_results = combine(grouped_df, transformations...)
 
+    transformed_df = transform(data, transformations...)
+    grouped_df = groupby(transformed_df, gb_columns)
+    agg_results = combine(grouped_df, combinations...)
+    sort!(agg_results, x_columns...)
     return agg_results
 end
 

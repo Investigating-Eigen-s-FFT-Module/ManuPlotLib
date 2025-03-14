@@ -18,7 +18,8 @@ function create_plot(template::Dict{String,Any}, output_dir::AbstractString, ben
         exit(1)
     end
 
-    aggregate = df -> aggregate_data(template, df, group_by_names, template["y_values"])
+    aggregate = df -> aggregate_data(template, df, group_by_names,
+        template["x_values"], template["y_values"])
 
     agg_data_list = []
     meta_data_list = []
@@ -28,7 +29,7 @@ function create_plot(template::Dict{String,Any}, output_dir::AbstractString, ben
             gather_data(template, output_dir, hash)
         catch e
             @error "Data gather failed for benchmark template '$name'" e
-            exit()
+            exit(1)
         end
         
         push!(agg_data_list, aggregate.(d))
@@ -38,68 +39,93 @@ function create_plot(template::Dict{String,Any}, output_dir::AbstractString, ben
     # SUBPLOTS CREATION
     group_cols = template["group_by_columns"]
     xcol = template["x_values"][1]
-    ycols = template["y_values"] .* ("_" * template["aggregation_function"])
+    ycols = template["y_values"]
 
-    color_map = first(ColorSchemes.glasbey_hv_n256.colors, length(ycols))
+    color_map = first(ColorSchemes.glasbey_hv_n256.colors, length(ycols) + length(group_cols))
     push_preamble!(td, ("glasbeyhvn256", color_map))
-    
-    y_transform = template["y_transform"] == "none" ? (x, y) -> y :
-    template["y_transform"] == "flops_per_ms" ? (x, y) -> 5. * x * log2(x) / y :
-    (x, y) -> y
-    x_transform = template["x_transform"] == "none" ? x -> x :
-    template["x_transform"] == "B_to_MiB" ? x -> x * 2e-10 :
-    x -> x
     
     # Create a list to hold each subplot's axis
     axes = []
-
+    
     for ycol in ycols
+        
+        # Each df_vec should correspond to a benchmark hash
+        # md_vec contains the corresponding set of csv metadata info from the csv(s)
+        
+        # First determine unique identifiers based on group column names to build legend labels
+        # and titles
+        group_col_entries = DataFrame([name => [] for name in  group_cols])
+        for df_vec in agg_data_list 
+            for df in df_vec
+                append!(group_col_entries, unique(eachrow(df[:, group_cols])))
+            end
+        end
+        
+        # Determine columns with different entries
+        different_entry_cols = [] # entries will be in label
+        
+        for (col_name, col) in zip(names(group_col_entries), eachcol(group_col_entries))
+            unique_entries = unique(col)
+            if length(unique_entries) != 1
+                push!(different_entry_cols, col_name)
+            end
+        end
+        
         # Create a new axis for each y column
         ycol_axis = @pgf Axis(
             {
                 raw"axis background/.style={fill=gray!10}",
-                title = escape_latex_special_chars(ycol),
+                title = escape_latex_special_chars(ycol * "_" * template["aggregation_function"]),
                 xmode = template["x_scale"],
                 ymode = template["y_scale"],
                 log_basis_x = template["x_log_basis"],
                 log_basis_y = template["y_log_basis"],
                 x_dir = template["x_dir"],
                 y_dir = template["y_dir"],
-                y_label_style = {at={"(yticklabel* cs:1)"}, anchor="north west", rotate=-90, yshift="1.5em", xshift="-4em"},
-                grid = "major",
+                y_label_style = {at={"(yticklabel* cs:1)"}, anchor="north west",
+                    rotate=-90, yshift="1em", xshift="-4em"},
+                grid = "both",
                 grid_style = "white",
                 legend_pos = "outer north east",
-                legend_style = {align="left"},
+                legend_cell_align = "left",
                 colormap_name = "glasbeyhvn256",
                 cycle_multiindex_list = "[of colormap]\\nextlist mark list"
             }
         )
-        
-        # Each df_vec should correspond to a benchmark hash
-        # md_vec contains the corresponding set of csv metadata info from the csv(s)
+
+        if template["error_bar_method"] != "none"
+            push!(ycol_axis.options,
+                "error bars/y dir=both",
+                "error bars/y explicit"
+            )
+        end
+
+        # Run through dfs again and create curves
         for (df_vec, md_vec) in zip(agg_data_list, meta_data_list)
             for (df, md) in zip(df_vec, md_vec)
-                # TODO: FIX varying cols: if defined here, it won't receive different implementation
-                unique_vals = Dict(col => unique(df[!, col]) for col in group_cols)
-                varying_cols = [col for col in group_cols if length(unique_vals[col]) > 1]
-                
                 grouped_df = groupby(df, group_cols)
-            
                 for gdf in grouped_df
-                    sort!(gdf, xcol)
-                    x_data = x_transform.(gdf[:, xcol])
-                    y_data = y_transform.(x_data, gdf[:, ycol])
+                    x_data = gdf[:, xcol]
+                    y_data = gdf[:, ycol]
                     
-                    label_cols = [string(gdf[1, col]) for col in varying_cols]
-                    group_label = length(label_cols) > 0 ? string(join(label_cols, ", ")) : ""
-
+                    label_cols = [string(gdf[1, col]) for col in different_entry_cols]
+                    group_label = string(join(label_cols, ", "))
+                        
                     if !template["combine_same_benchmark_data"] || group_label == ""
                         group_label *= md["tag"]
                     end
                     
-                    plot = @pgf Plot(
-                        Table(x_data, y_data)
-                    )
+                    plot = if template["error_bar_method"] != "none"
+                        y_err = gdf[:, ycol * "_" * template["error_bar_method"]]
+
+                        @pgf Plot(
+                            Coordinates(x_data, y_data; yerror = y_err)
+                        )
+                    else
+                        @pgf Plot(
+                            Table(x_data, y_data)
+                        )
+                    end
 
                     # Add to axis for this y value
                     push!(ycol_axis, plot)
@@ -122,8 +148,8 @@ function create_plot(template::Dict{String,Any}, output_dir::AbstractString, ben
                     horizontal_sep = "1cm",
                     x_descriptions_at = "edge bottom"
                 },
-                xlabel = escape_latex_special_chars(xcol),
-                ylabel = "TODO"
+                xlabel = escape_latex_special_chars(template["x_label"]),
+                ylabel = escape_latex_special_chars(template["y_label"])
             }
         )
 
@@ -134,10 +160,17 @@ function create_plot(template::Dict{String,Any}, output_dir::AbstractString, ben
         push!(td, TikzPicture(groupplot))
     else
         # For a single plot
-        push!(td, TikzPicture(axes[1]))
+        single_axis = axes[1]
+        push!(single_axis.options,
+            :xlabel => escape_latex_special_chars(template["x_label"]),
+            :ylabel => escape_latex_special_chars(template["y_label"])
+        )
+        push!(td, TikzPicture(single_axis))
     end
     
+    save_path = joinpath(output_dir, "$(now())")
+    mkpath(save_path)
     # Save the figure
-    pgfsave(joinpath(output_dir, "test.tex"), td)
-    pgfsave(joinpath(output_dir, "test.pdf"), td)
+    pgfsave(joinpath(save_path, "plot.tex"), td)
+    pgfsave(joinpath(save_path, "plot.pdf"), td)
 end

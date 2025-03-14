@@ -6,7 +6,7 @@ y_scale = "log"                     # Possible values: "log", "linear"
 y_dir   = "normal"                  # Possible values: "normal", "reverse"
 x_log_basis = 2
 y_log_basis = 10
-x_label = "[MiB]"                   # Label for the x-axis
+x_label = "[Bytes]"                 # Label for the x-axis
 y_label = "[ms]"                    # Label for the y-axis
 
 # Benchmark output selection
@@ -24,13 +24,21 @@ y_values = ["Time_FFT_ms", "Time_iFFT_ms", "Time_Total_ms"] # Which values to pl
 combine_same_benchmark_data = true        # Use true to merge data from the same benchmark into one curve
 aggregation_function = "mean"             # Possible choices: "mean", "median", "min", "max"
 error_bar_method = "none"                 # Possible choices: "std_dev", "quantiles", "max_dev", "none"
+quantile_low = 0.1                        # Lowest quantile for quantiles error_bar_method
+quantile_high = 0.9                       # Highest quantile for quantiles error_bar_method
 x_transform = "none"                      # Optional transform of the x-axis (currently just 'B_to_MiB')
 y_transform = "none"                      # Optional transform of the measured data on the y-axis
-                                          # (currently just 'flops_per_ms' to compute FFT peak performance)
+                                          # (currently just 'fft_perf' to compute FFT performance)
 
 [test]
 inherits = "base"
-benchmark_templates = ["test-eigen-fftw-outplace-complex-double", "test-fftw-outplace-complex-double"]
+x_label = "[MiB]"
+y_label = "[P/ms]"
+y_scale = "linear"
+x_transform = "B_to_MiB"
+y_transform = "fft_perf"
+benchmark_templates = ["test-eigen-fftw-outplace-complex-double"]
 csv_count_per_benchmark = 2
-combine_same_benchmark_data = true
-y_values = ["Time_FFT_ms", "Time_iFFT_ms"]
+combine_same_benchmark_data = false
+y_values = ["Time_FFT_ms"]
+error_bar_method = "quantiles"
