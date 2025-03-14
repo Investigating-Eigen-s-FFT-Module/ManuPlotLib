@@ -5,16 +5,9 @@ using TOML
 gearshifft_impl = [:fftw, :eigen_fftw, :eigen_kissfft,
                    :eigen_mkl, :eigen_pocketfft]
 
-# Load default config values
-function load_config()::Dict
-    config_path = joinpath(@__DIR__, "..", "config", "config.toml")
-    return TOML.parsefile(config_path)
-end
-
 # Parse commandline arguments
 function parse_commandline()
-    config = load_config() # default values that may be overridden
-    default_paths = config["paths"]
+    default_paths = CONFIG["paths"] # default values that may be overridden
 
     s = ArgParseSettings(
         description = "GearshifftEvaluation - Benchmark and plot FFT implementations with Gearshifft",

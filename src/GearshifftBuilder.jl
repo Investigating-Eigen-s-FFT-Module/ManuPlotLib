@@ -6,16 +6,13 @@ using Dates
 get_hash(preset::OrderedDict) = bytes2hex(sha256(JSON3.write(preset)))
 
 function cmake_preset_from_template(template::Dict, name::String)
+    cache_variable_map = CONFIG["build_template_variables"]
     new_preset = try
         OrderedDict(
             "inherits" => template["cmake_inherits"],
             "cacheVariables" => OrderedDict{String, Any}(
-                "GEARSHIFFT_NUMBER_WARMUPS"    => template["nr_warmup"],
-                "GEARSHIFFT_NUMBER_WARM_RUNS"  => template["nr_warm_runs"],
-                "GEARSHIFFT_ERROR_BOUND"       => template["error_bound"],
-                "GEARSHIFFT_DUMP_FREQUENCY"    => template["dump_frequency"],
-                "GEARSHIFFT_LLC_SIZE_MIB"      => template["llc_mib"],
-                "GEARSHIFFT_CACHE_LINE_SIZE_B" => template["cl_mb"]
+                cmake_name => template[template_name]
+                    for (cmake_name, template_name) in cache_variable_map
             )
         )
     catch e
@@ -74,16 +71,8 @@ function generate_cmake_userpreset(template::Dict, name::String, path::String)
             existing_presets
         else
             @info "No CMakeUserPresets.json, creating new one..."
-            OrderedDict(
-                "\$schema" => "https://raw.githubusercontent.com/Kitware/CMake/refs/tags/v3.31.5/Help/manual/presets/schema.json",
-                "version" => 10,
-                "cmakeMinimumRequired" => OrderedDict(
-                    "major" => 3,
-                    "minor" => 31,
-                    "patch" => 0
-                ),
-                "configurePresets" => [new_preset]
-            )
+            base_cmake_user_presets = CONFIG["cmake_user_presets"]
+            push!(base_cmake_user_presets, "configurePresets" => [new_preset])
         end
 
     # Write updated presets to file (if cmake_presets isn't nothing)
@@ -112,7 +101,7 @@ function cmake_build(preset_name::String, preset_hash::String, cache_dir::String
     log_file  = joinpath(log_path, "cmake_build_logs", "$(preset_name)-$(now()).log")
 
     run_command_from_path(`cmake --build build/$preset_hash`, log_file, path)
-    cp(joinpath(path, "build", preset_hash, "gearshifft"), bin_path, force=true)
+    cp(joinpath(path, "build", preset_hash, "gearshifft"), bin_path, force=true) # TODO: cp source should be abstracted to config
 end
 
 function build(template::Dict, name::String, gearshifft_root::AbstractString, cache_dir::AbstractString)

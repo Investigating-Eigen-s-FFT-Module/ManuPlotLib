@@ -2,3 +2,25 @@
 gearshifft_root    = "../gearshifft"             # root of gearshifft repo relative to GearshifftEvaluation root dir
 output_dir         = "output/"                   # default place to store program outputs (plots etc.)
 cache_dir          = ".cache/"                   # default place to cache information
+
+# Defines parameters for injected CMakeUserPresets.json
+# of benchmarking repo. Only relevant if the benchmarking
+# repo doesn't have a CMakeUserPresets.json yet.
+# Should typically match CMakePresets.json parameters.
+[cmake_user_presets]
+"$schema" = "https://raw.githubusercontent.com/Kitware/CMake/refs/tags/v3.31.5/Help/manual/presets/schema.json"
+"version" = 10
+"cmakeMinimumRequired" = {"major" = 3, "minor" = 31, "patch" = 0}
+
+# Mapping from benchmark template keys to relevant
+# CMake preset cacheVariables of benchmarking repo.
+# (Additional cache vars without any map defined here
+# can always be set with key
+# "cache_vars" in benchmark_templates.toml)
+[build_template_variables]
+"GEARSHIFFT_NUMBER_WARMUPS"    = "nr_warmup"
+"GEARSHIFFT_NUMBER_WARM_RUNS"  = "nr_warm_runs"
+"GEARSHIFFT_ERROR_BOUND"       = "error_bound"
+"GEARSHIFFT_DUMP_FREQUENCY"    = "dump_frequency"
+"GEARSHIFFT_LLC_SIZE_MIB"      = "llc_mib"
+"GEARSHIFFT_CACHE_LINE_SIZE_B" = "cl_mb"

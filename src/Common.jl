@@ -1,6 +1,14 @@
 using TOML
 using SHA
 
+# Load default config values
+function load_config()::Dict
+    config_path = joinpath(@__DIR__, "..", "config", "config.toml")
+    return TOML.parsefile(config_path)
+end
+
+const CONFIG = load_config()
+
 function get_template(toml_data::Dict, name::String, visited::AbstractArray=[])
     # Get the specified preset configuration
     template = get(toml_data, name, nothing)
