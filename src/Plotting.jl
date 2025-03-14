@@ -201,17 +201,17 @@ function create_plot(template::Dict{String,Any}, template_name::String,
         push!(td, TikzPicture(single_axis))
     end
     
-    save_path = joinpath(output_dir, template_name, plot_hash)
+    datetime = string(now())
+    save_path = joinpath(output_dir, template_name, plot_hash, datetime)
     @info "Saving output files at:
     '$save_path'"
     mkpath(save_path)
     # Save the figure
-    datetime = now()
-    pgfsave(joinpath(save_path, "$datetime.tex"), td)
-    pgfsave(joinpath(save_path, "$datetime.pdf"), td)
+    pgfsave(joinpath(save_path, "$template_name.tex"), td)
+    pgfsave(joinpath(save_path, "$template_name.pdf"), td)
 
     # Save the metadata to a JSON file
-    open(joinpath(save_path, "metadata@$(datetime).json"), "w") do io
+    open(joinpath(save_path, "metadata_$(template_name).json"), "w") do io
         JSON3.pretty(io, metadata)
     end
     @info "Plotting completed successfully" datetime

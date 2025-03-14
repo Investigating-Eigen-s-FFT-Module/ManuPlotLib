@@ -34,7 +34,7 @@ function aggregate_data(template::Dict{String,Any}, data::DataFrame)
 
     x_transform = try
         Dict(
-            "B_to_MiB" =>  x -> x * 2e-10,
+            "B_to_MiB" =>  x -> x * 2^-20,
             "none" => identity
         )[template["x_transform"]]
     catch e
@@ -67,7 +67,6 @@ function aggregate_data(template::Dict{String,Any}, data::DataFrame)
     for xcol in x_columns
         push!(transformations, xcol => x_transform => xcol)
     end
-
     transformed_df = transform(data, transformations...)
     grouped_df = groupby(transformed_df, gb_columns)
     agg_results = combine(grouped_df, combinations...)
