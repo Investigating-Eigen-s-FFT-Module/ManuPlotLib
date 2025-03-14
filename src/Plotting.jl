@@ -1,9 +1,12 @@
 using PGFPlotsX
 using ColorSchemes
+using JSON3
 
 escape_latex_special_chars(str::String) = replace(str, r"([%$#&_{}~^\\])" => s"\\\1")
 
-function create_plot(template::Dict{String,Any}, output_dir::AbstractString, benchmark_templates::Dict{String,Any})
+function create_plot(template::Dict{String,Any}, template_name::String,
+                     output_dir::AbstractString, benchmark_templates::Dict{String,Any})
+    plot_hash = get_template_hash(template, template_name)
     td = TikzDocument()
 
     group_by_names = vcat(template["x_values"], template["group_by_columns"])
@@ -23,6 +26,8 @@ function create_plot(template::Dict{String,Any}, output_dir::AbstractString, ben
 
     agg_data_list = []
     meta_data_list = []
+    metadata = Dict(("plot_template" => Dict("name" => template_name, "hash" => plot_hash)),
+        "benchmark_templates" => [])
     
     for (name, hash) in zip(benchmark_template_names, benchmark_template_hashes)
         md, d = try
@@ -34,6 +39,13 @@ function create_plot(template::Dict{String,Any}, output_dir::AbstractString, ben
         
         push!(agg_data_list, aggregate.(d))
         push!(meta_data_list, md)
+        push!(metadata["benchmark_templates"],
+            Dict(
+                "name" => name,
+                "hash" => hash,
+                "csv_meta_data" => md
+                )
+            )
     end
     
     # SUBPLOTS CREATION
@@ -112,7 +124,7 @@ function create_plot(template::Dict{String,Any}, output_dir::AbstractString, ben
                     group_label = string(join(label_cols, ", "))
                         
                     if !template["combine_same_benchmark_data"] || group_label == ""
-                        group_label *= md["tag"]
+                        group_label *= ", $(md["tag"])"
                     end
                     
                     plot = if template["error_bar_method"] != "none"
@@ -168,9 +180,15 @@ function create_plot(template::Dict{String,Any}, output_dir::AbstractString, ben
         push!(td, TikzPicture(single_axis))
     end
     
-    save_path = joinpath(output_dir, "$(now())")
+    save_path = joinpath(output_dir, template_name, plot_hash)
     mkpath(save_path)
     # Save the figure
-    pgfsave(joinpath(save_path, "plot.tex"), td)
-    pgfsave(joinpath(save_path, "plot.pdf"), td)
+    datetime = now()
+    pgfsave(joinpath(save_path, "$datetime.tex"), td)
+    pgfsave(joinpath(save_path, "$datetime.pdf"), td)
+
+    # Save the metadata to a JSON file
+    open(joinpath(save_path, "metadata@$(datetime).json"), "w") do io
+        JSON3.pretty(io, metadata)
+    end
 end

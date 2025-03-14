@@ -44,7 +44,7 @@ function aggregate_data(template::Dict{String,Any}, data::DataFrame,
     y_transform = try
         Dict(
             "fft_perf" =>  (x, y) -> 5. * x * log(x) / y,
-            "none" => identity
+            "none" => (x, y) -> identity(y)
         )[template["y_transform"]]
     catch e
         @error "Invalid y transform method: '$(template["y_transform"])'" e
@@ -56,13 +56,15 @@ function aggregate_data(template::Dict{String,Any}, data::DataFrame,
     for ycol in y_columns
         for xcol in x_columns
             push!(transformations, [xcol, ycol] => ByRow(y_transform) => ycol)
-            push!(transformations, xcol => x_transform => xcol)
         end
         push!(combinations, ycol => agg_fun => ycol)
         
         if !isnothing(error_method)
             push!(combinations, ycol => error_method => ycol * "_" * template["error_bar_method"])
         end
+    end
+    for xcol in x_columns
+        push!(transformations, xcol => x_transform => xcol)
     end
 
     transformed_df = transform(data, transformations...)

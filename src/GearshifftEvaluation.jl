@@ -34,7 +34,7 @@ function main()
     
     if !isnothing(plot_template_name)
         plot_template = get_template(TOML.parsefile(plot_templates_path), plot_template_name)
-        create_plot(plot_template, output_dir, benchmark_templates)
+        create_plot(plot_template, plot_template_name, output_dir, benchmark_templates)
     end
 end
 end # module GearshifftEvaluation
