@@ -9,15 +9,23 @@ end
 
 const CONFIG = load_config()
 
+function get_nested(toml_data::Dict, keys::Tuple, default=nothing)
+    value = toml_data
+    for key in keys
+        value = get(value, key, nothing)
+    end
+    return value
+end
+
 function get_template(toml_data::Dict, name::String, visited::AbstractArray=[])
     # Get the specified preset configuration
     template = get(toml_data, name, nothing)
-    isnothing(template) && error("Benchmark template '$name' not found in TOML file")
+    isnothing(template) && error("Key: '$name' not found in TOML file")
 
     # Check for parents
     parent = get(template, "inherits", nothing)
     parent_template = if !isnothing(parent)
-        (parent in visited) && error("Benchmark template '$name' detected circular inheritance")
+        (parent in visited) && error("Key: '$name' detected circular inheritance")
         push!(visited, name)
         get_template(toml_data, parent, visited)
     end
@@ -33,6 +41,53 @@ function get_template(toml_data::Dict, name::String, visited::AbstractArray=[])
             merge!(parent_template["cache_vars"], template["cache_vars"])
         end
     end
+    return template
+end
+
+# Nested version will check for parents across all levels of nestedness
+function get_template(toml_data::Dict, names::Tuple{Vararg{String}}, visited::AbstractArray=[])
+    # Get the specified preset configuration
+    template = get_nested(toml_data, names)
+    isnothing(template) && return nothing
+
+    # Check for parents
+    parent = get(template, "inherits", nothing)
+    parent_templates = []
+    if !isnothing(parent)
+        (parent in visited) && error("Key: '$(join(names, "."))' detected circular inheritance")
+        push!(visited, join(names, "."))
+
+        for i in 0:length(names)-1
+            parent_template = get_template(toml_data, (names[1:i]..., parent), visited)
+            if !isnothing(parent_template)
+                push!(parent_templates, parent_template)
+            end
+        end
+
+        if isempty(parent_templates)
+            @error "Could not find key: '$parent' which is inherited by '$names[1]'"
+            exit(1)
+        end
+    end
+
+    if length(parent_templates) > 1
+        @warn "Found multiple keys for key: '$parent' which is inherited by  '$names[1]'.
+    Inheritance will default to highest level one"
+    end
+
+    if !isempty(parent_templates) # Merge and overwrite parent template
+        parent_template = parent_templates[1] # default to highest level one found
+        template = merge(parent_template, template)
+        if haskey(parent_template, "cmake_inherits") && haskey(template, "cmake_inherits") # handle merging of cmake inherits
+            template["cmake_inherits"] =
+                vcat(template["cmake_inherits"], setdiff(parent_template["cmake_inherits"], template["cmake_inherits"])) # append older parent's cmake inherits if
+                                                                                                                         # they don't exist yet
+        end
+        if haskey(parent_template, "cache_vars") && haskey(template, "cache_vars") # handle merging of additional cache variables
+            merge!(parent_template["cache_vars"], template["cache_vars"])
+        end
+    end
+
     return template
 end
 

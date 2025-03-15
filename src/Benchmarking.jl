@@ -1,5 +1,18 @@
 using SHA
 
+# Base function which takes 
+function parse_runtime_flag(template::Dict, key::String)
+    arg = get(template, key, nothing)
+
+    if isa(arg, AbstractArray)
+        join(arg, " ")
+    elseif isa(arg, Bool)
+        arg ? arg : nothing
+    else
+        arg
+    end
+end
+
 function run_benchmark(template::Dict, name::String, build_hash::String,
                        gearshifft_root::AbstractString, cache_dir::AbstractString,
                        output_dir::AbstractString, tag=nothing)
@@ -7,15 +20,24 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
     template_hash = get_template_hash(template, name)
     output_csv =  join([template_hash, "-" , time, ".csv"])
 
-    fft_implementation = get(template, "implementation", nothing)
-    isnothing(fft_implementation) && error("Benchmark template '$name' does not specify an FFT implementation")
-    @info "Running benchmark with implementation '$fft_implementation'"
+    implementation = get(template, "implementation", nothing)
+    if isnothing(implementation)
+        @error "Benchmark template '$name' does not specify an FFT implementation"
+        exit(1)
+    end
+    if !(implementation in keys(CONFIG["implementations"]))
+        @error "Specified implementation '$implementation' not found in config/config.toml"
+        exit(1)
+    end
+
+    executable = get_nested(CONFIG, ("implementations", implementation, "binary"))
+    runtime_flags = get_template(CONFIG,
+        ("implementations", implementation, "run_template_variables"))
+    
+    @info "Running benchmark with implementation '$implementation'"
 
     extents::AbstractArray = template["extents"]
     (length(extents) == 0) && error("Benchmark template '$name' doesn't have any extents files specified")
-
-    verbose::Bool          = template["verbose"]
-    nr_devices::Integer    = template["nr_devices"]
 
     # translate following params to wildcard syntax
     benchmarks_string = try
@@ -43,7 +65,6 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
         exit(1)
     end 
     bin_path = joinpath(cache_dir, build_hash)
-    executable = "gearshifft_$(fft_implementation)"
 
     extents_dir = joinpath(@__DIR__, "..", "config", "extents")
     gearshifft_extents_dir = joinpath(gearshifft_root, "share", "gearshifft")
@@ -61,22 +82,35 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
             end
         end
     end
-
+    
     mkpath(joinpath(cache_dir, "benchmark_logs"))
+    cli_vars = CONFIG["parse_cli_variables"]
     log_file = joinpath(cache_dir, "benchmark_logs", "$name-$template_hash-$time.log")
-    base_args = [
-        "./$executable",
-        "-f", join(extents, " "),
-        "-o", output_csv,
-        "-t", isnothing(tag) ? join([name, time], "@") : tag, # default tag is name and time in csv
-        verbose ? "-v" : nothing,
-        "-n", "$nr_devices",
-        "-r", benchmarks_string
-    ]
-    filtered_args = Vector{String}(filter(x -> x !== nothing, base_args))
-    command = Cmd(filtered_args)
+    
+    # Gets flag to key map pairs (e.g ("-n", "nr_devices")),
+    # maps it to the runtime arg (e.g. ("-n", 1), filters them out
+    # if value is false or nothing (unused flags) and flattens
+    # them to a string
+    flags = map(p -> (first(p), parse_runtime_flag(template, last(p))), collect(runtime_flags))
+    flags = filter(p -> !isnothing(last(p)), flags)
+    flags = collect(Iterators.flatten(flags))
+    flags = map(e -> string(e), flags)
 
-    @info "Running benchmark: $command"
+    args = [
+        # implementation binary
+        "./$executable",
+        # runtime flags of binary
+        flags...,
+        "-r", benchmarks_string,
+        # obligatory runtime flags set by ParseCli.jl
+        cli_vars["benchmark_tag"],
+            isnothing(tag) ? join([name, time], "@") : tag, # default tag is name and time in csv
+        cli_vars["output_file"], output_csv
+    ]
+
+    command = Cmd(args)
+
+    @info "Comand: $command"
     run_command_from_path(command, log_file, bin_path)
     try
         mkpath(joinpath(output_dir, "csv", output_csv))

@@ -1,10 +1,6 @@
 using ArgParse
 using TOML
 
-# Possible FFT implementations in gearshifft (todo: extend if applicable)
-gearshifft_impl = [:fftw, :eigen_fftw, :eigen_kissfft,
-                   :eigen_mkl, :eigen_pocketfft]
-
 # Parse commandline arguments
 function parse_commandline()
     default_paths = CONFIG["paths"] # default values that may be overridden

@@ -12,8 +12,8 @@ cache_dir          = ".cache/"                   # default place to cache inform
 "version" = 10
 "cmakeMinimumRequired" = {"major" = 3, "minor" = 31, "patch" = 0}
 
-# Mapping from benchmark template keys to relevant
-# CMake preset cacheVariables of benchmarking repo.
+# Mapping from relevant CMake preset cacheVariables
+# of benchmarking repo  to benchmark template keys.
 # (Additional cache vars without any map defined here
 # can always be set with key
 # "cache_vars" in benchmark_templates.toml)
@@ -24,3 +24,64 @@ cache_dir          = ".cache/"                   # default place to cache inform
 "GEARSHIFFT_DUMP_FREQUENCY"    = "dump_frequency"
 "GEARSHIFFT_LLC_SIZE_MIB"      = "llc_mib"
 "GEARSHIFFT_CACHE_LINE_SIZE_B" = "cl_mb"
+
+# TODO: allow for implementation-specific build_template_variable mappings
+
+# Base mapping from relevant runtime arguments (flags) 
+# of benchmarking repo to benchmark template keys
+# Implementation-specific flags can be set
+# below and inherit from this map
+[base_run_template_variables]
+"-f" = "extents"
+"-n" = "nr_devices"
+"-v" = "verbose"
+# Flags that don't follow the pattern
+# `./<implementation> <flag>=template[<key>]`
+# can also be specified but require a customized
+# julia extension of the basic "run_benchmark"
+# function. Extensions are declared in
+# 'config/BenchmmarkingExtensions.jl'
+# "-r" = ["inplace, outplace, real, complex, precision"]
+
+
+
+# Mapping from implementation key
+# to different implementations (output binaries)
+[implementations]
+[implementations.fftw]
+"binary" = "gearshifft_fftw"
+[implementations.eigen_fftw]
+"binary" = "gearshifft_eigen_fftw"
+[implementations.eigen_kissfft]
+"binary" = "gearshifft_eigen_kissfft"
+[implementations.eigen_mkl]
+"binary" = "gearshifft_eigen_mkl"
+[implementations.eigen_pocketfft]
+"binary" = "gearshifft_eigen_pocketfft"
+
+# TODO: make these optional if they just inherit base
+# Usually, all specified implementation
+# runtime args inherit from
+# key `base_run_template_variables`
+[implementations.fftw.run_template_variables]
+"inherits" = "base_run_template_variables"
+
+[implementations.eigen_fftw.run_template_variables]
+"inherits" = "base_run_template_variables"
+
+[implementations.eigen_kissfft.run_template_variables]
+"inherits" = "base_run_template_variables"
+
+[implementations.eigen_mkl.run_template_variables]
+"inherits" = "base_run_template_variables"
+
+[implementations.eigen_pocketfft.run_template_variables]
+"inherits" = "base_run_template_variables"
+
+# TODO: allow for implementation-specific mappings here too
+# Defines required mappings from `gearshifft-eval` flags
+# to corresponding flags of implementation binaries
+[parse_cli_variables]
+"benchmark_tag" = "-t"
+"output_file" = "-o" # can be '>' if implemementation binary
+                     # prints csv to stdout
