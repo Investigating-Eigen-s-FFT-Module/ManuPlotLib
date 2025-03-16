@@ -2,6 +2,8 @@
 gearshifft_root    = "../gearshifft"             # root of gearshifft repo relative to GearshifftEvaluation root dir
 output_dir         = "output/"                   # default place to store program outputs (plots etc.)
 cache_dir          = ".cache/"                   # default place to cache information
+input_file_dirs    = ["share/gearshifft"]        # set of dirs, whose contents should be in the working directory of
+                                                 # the benchmark binary. Relative to gearshifft_root
 
 # Defines parameters for injected CMakeUserPresets.json
 # of benchmarking repo. Only relevant if the benchmarking
@@ -35,6 +37,7 @@ cache_dir          = ".cache/"                   # default place to cache inform
 "-f" = "extents"
 "-n" = "nr_devices"
 "-v" = "verbose"
+"-d" = "device"
 # Flags that don't follow the pattern
 # `./<implementation> <flag>=template[<key>]` or
 # `./<implementation> <flag>=join(template[<key>], " ")`
@@ -64,6 +67,10 @@ cache_dir          = ".cache/"                   # default place to cache inform
 # key `base_run_template_variables`
 [implementations.fftw.run_template_variables]
 "inherits" = "base_run_template_variables"
+"--rigor" = "plan_rigor"
+"--wisdom_sp" = "wisdom_file_float"
+"--wisdom_dp" = "wisdom_file_double"
+"--plan_timelimit" = "plan_timelimit"
 
 [implementations.eigen_fftw.run_template_variables]
 "inherits" = "base_run_template_variables"

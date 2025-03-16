@@ -16,7 +16,7 @@ function parse(template::Dict, flag_key::Pair)
     if !isnothing(custom_parse)
         return (flag, custom_parse(template, key))
     else
-        arg = template[key]
+        arg = get(template, key, nothing)
         value = if isa(arg, AbstractArray)
             join(arg, " ")
         elseif isa(arg, Bool)
@@ -44,6 +44,24 @@ function parse_runtime_flags(template::Dict, implementation::String)::Vector{Str
     # Gets flag to key map pairs for implementation (e.g ("-n", "nr_devices"))
     flags = get_template(CONFIG,
         ("implementations", implementation, "run_template_variables"))
+    
+    possible_template_values =
+        [
+            vcat(values(flags)...)...,
+            vcat(values(CONFIG["build_template_variables"])...)...,
+            "cmake_inherits",
+            "cache_vars",
+            "implementation"
+        ]
+
+    for key in keys(template)
+        if !(key in possible_template_values)
+            @warn "Found key '$key' in benchmark template
+            which does not have an associated flag in config.toml
+            (under implementations.$implementation.run_template_variables)"
+        end
+    end
+
     # map keys to the value (e.g. ("-n", 1))
     flags = map(p -> parse(template, p), collect(flags))
     # filter flag value pairs out if value is false or nothing (unused flags)
@@ -78,10 +96,11 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
 
     bin_path = joinpath(cache_dir, build_hash)
 
-    extents_dir = joinpath(@__DIR__, "..", "config", "extents")
-    gearshifft_extents_dir = joinpath(gearshifft_root, "share", "gearshifft")
-    # Copy extent files from both directories to bin_path
-    for dir in [extents_dir, gearshifft_extents_dir]
+    input_files_dir = joinpath(@__DIR__, "..", "config", "input_files")
+    root_input_files_dirs = get_nested(CONFIG, ("paths", "input_file_dirs"), [])
+
+    # Copy files from both directories to bin_path
+    for dir in [input_files_dir, root_input_files_dirs...]
         if isdir(dir)
             for file in readdir(dir)
                 src = joinpath(dir, file)
@@ -89,7 +108,7 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
                 try
                     cp(src, dst, force = true)
                 catch e
-                    @warn "Failed to copy extent file: $file" exception=e
+                    @warn "Failed to copy file: $file" exception=e
                 end
             end
         end

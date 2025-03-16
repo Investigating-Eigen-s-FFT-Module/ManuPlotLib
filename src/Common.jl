@@ -42,7 +42,7 @@ function get_template(toml_data::Dict, name::String, visited::AbstractArray=[])
         end
     end
     delete!(template, "inherits") # remove inheritance key, final merged template shouldn't have it anymore
-    
+
     return template
 end
 
