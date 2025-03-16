@@ -3,7 +3,6 @@ using TOML
 
 # Parse commandline arguments
 function parse_commandline()
-    default_paths = CONFIG["paths"] # default values that may be overridden
 
     s = ArgParseSettings(
         description = "GearshifftEvaluation - Benchmark and plot FFT implementations with Gearshifft",
@@ -31,26 +30,14 @@ function parse_commandline()
             help = "Specify a custom tag in the output csv (line 1); Default is benchmark template hash and datetime"
             group = :benchmark_opt
         "--plot-tag", "-T"
-            help = "Specify a regex pattern to filter output csv files by their tag (in line 1 of csv)"
+            help = "Specify a regex pattern to filter output csv files by their tag (in metadata of csv)"
             default = nothing
-        "--gearshifft-root"
-            help = "root directory of gearshifft repo"
-            arg_type = String
-            default = default_paths["gearshifft_root"]
-        "--output-dir", "-o"
-            help = "location of program results (benchmarks/plots)"
-            arg_type = String
-            default = default_paths["output_dir"]
-        "--cache-dir", "-c"
-            help = "location of temporary files (e.g. last used benchmark template)"
-            arg_type = String
-            default = default_paths["cache_dir"]
     end
     args = try
         parse_args(s)
     catch e
         @error e.text
-        @info "See ./gearshifft_evaluation -h for usage details"
+        @info "See ./gearshifft-eval -h for usage details"
         exit(1)
     end
     return args

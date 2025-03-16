@@ -1,18 +1,28 @@
 using TOML
 using SHA
 
+const PROJECT_ROOT = joinpath(@__DIR__, "..")
+const CONFIG_PATH = joinpath(PROJECT_ROOT, "config")
+const BENCHMARK_TEMPLATES_PATH = joinpath(PROJECT_ROOT, "templates", "benchmark_templates.toml")
+const INPUT_FILES_DIR = joinpath(CONFIG_PATH, "input_files")
+
 # Load default config values
 function load_config()::Dict
-    config_path = joinpath(@__DIR__, "..", "config", "config.toml")
+    config_path = joinpath(CONFIG_PATH, "config.toml")
     return TOML.parsefile(config_path)
 end
 
 const CONFIG = load_config()
+const CONFIG_PATHS = CONFIG["paths"] 
+const PLOT_TEMPLATES_PATH = joinpath(PROJECT_ROOT, "templates", "plot_templates.toml")
+const CACHE_DIR = joinpath(PROJECT_ROOT, CONFIG_PATHS["cache_dir"])
+const BENCHMARK_ROOT = joinpath(PROJECT_ROOT, CONFIG_PATHS["gearshifft_root"])
+const OUTPUT_DIR = joinpath(PROJECT_ROOT, CONFIG_PATHS["output_dir"])
 
 function get_nested(toml_data::Dict, keys::Tuple, default=nothing)
     value = toml_data
     for key in keys
-        value = get(value, key, nothing)
+        value = get(value, key, default)
     end
     return value
 end

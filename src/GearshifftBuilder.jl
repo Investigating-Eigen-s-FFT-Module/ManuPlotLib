@@ -91,9 +91,9 @@ function cmake_config(preset_name::String, preset_hash::String, path::String, lo
     run_command_from_path(`cmake --preset $preset_hash`, log_file, path)
 end
 
-function cmake_build(preset_name::String, preset_hash::String, cache_dir::String,
-                     path::String, log_path::String=cache_dir)
-    bin_path = joinpath(cache_dir, preset_hash)
+function cmake_build(preset_name::String, preset_hash::String,
+                     path::String, log_path::String=CACHE_DIR)
+    bin_path = joinpath(CACHE_DIR, preset_hash)
     mkpath(joinpath(bin_path))
     # Run Generator through CMake
     @info "Building with benchmark template '$preset_name'"
@@ -104,17 +104,17 @@ function cmake_build(preset_name::String, preset_hash::String, cache_dir::String
     cp(joinpath(path, "build", preset_hash, "gearshifft"), bin_path, force=true) # TODO: cp source should be abstracted to config
 end
 
-function build(template::Dict, name::String, gearshifft_root::AbstractString, cache_dir::AbstractString)
+function build(template::Dict, name::String)
     # Symlink gearshifft root if not already done
-    gearshifft_path = joinpath(cache_dir, "gearshifft")
+    gearshifft_path = joinpath(CACHE_DIR, "gearshifft")
     if !isdir(gearshifft_path)
-        @info "Creating symlink to '$gearshifft_root'"
-        symlink(gearshifft_root, gearshifft_path, dir_target = true)
+        @info "Creating symlink to '$PROJECT_ROOT'"
+        symlink(PROJECT_ROOT, gearshifft_path, dir_target = true)
     end
 
     preset_hash = generate_cmake_userpreset(template, name, gearshifft_path)
     cmake_config(name, preset_hash, gearshifft_path)
-    cmake_build(name, preset_hash, cache_dir, gearshifft_path)
+    cmake_build(name, preset_hash, gearshifft_path)
 
     return preset_hash
 end

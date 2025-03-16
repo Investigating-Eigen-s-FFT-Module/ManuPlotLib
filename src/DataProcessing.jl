@@ -74,8 +74,8 @@ function aggregate_data(template::Dict{String,Any}, data::DataFrame)
     return agg_results
 end
 
-function gather_data(template::Dict{String,Any}, output_dir::AbstractString, run_hash::String, tag=nothing)
-    data_dir = joinpath(output_dir, "csv")
+function gather_data(template::Dict{String,Any}, run_hash::String, tag=nothing)
+    data_dir = joinpath(OUTPUT_DIR, "csv")
     # Gather all CSV files matching our run_hash-<datetime>.csv pattern
     all_files = readdir(data_dir)
 

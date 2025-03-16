@@ -5,7 +5,7 @@ using JSON3
 escape_latex_special_chars(str::String) = replace(str, r"([%$#&_{}~^\\])" => s"\\\1")
 
 function create_plot(template::Dict{String,Any}, template_name::String,
-                     output_dir::AbstractString, benchmark_templates::Dict{String,Any})
+                     benchmark_templates::Dict{String,Any}, tag=nothing)
     @info "Creating plot with plot template '$template_name'"
     plot_hash = get_template_hash(template, template_name)
     td = TikzDocument()
@@ -33,7 +33,7 @@ function create_plot(template::Dict{String,Any}, template_name::String,
     @info "Gathering and aggregating csv files..."
     for (name, hash) in zip(benchmark_template_names, benchmark_template_hashes)
         md, d = try
-            gather_data(template, output_dir, hash)
+            gather_data(template, hash, tag)
         catch e
             @error "Data gather failed for benchmark template '$name'" e
             exit(1)
@@ -203,7 +203,7 @@ function create_plot(template::Dict{String,Any}, template_name::String,
     end
     
     datetime = string(now())
-    save_path = joinpath(output_dir, template_name, plot_hash, datetime)
+    save_path = joinpath(OUTPUT_DIR, template_name, plot_hash, datetime)
     @info "Saving output files at:
     '$save_path'"
     mkpath(save_path)
@@ -215,5 +215,5 @@ function create_plot(template::Dict{String,Any}, template_name::String,
     open(joinpath(save_path, "metadata_$(template_name).json"), "w") do io
         JSON3.pretty(io, metadata)
     end
-    @info "Plotting completed successfully" datetime
+    return plot_hash
 end

@@ -73,12 +73,11 @@ function parse_runtime_flags(template::Dict, implementation::String)::Vector{Str
     return flags
 end
 
-function run_benchmark(template::Dict, name::String, build_hash::String,
-                       gearshifft_root::AbstractString, cache_dir::AbstractString,
-                       output_dir::AbstractString, tag=nothing)
+function run_benchmark(template::Dict, name::String, build_hash::String, tag=nothing)
     time = "$(now())"
     template_hash = get_template_hash(template, name)
-    output_csv =  join([template_hash, "-" , time, ".csv"])
+    output_dir = joinpath(OUTPUT_DIR, "csv")
+    output_csv =  join([template_hash, "-", time, ".csv"])
 
     implementation = get(template, "implementation", nothing)
     if isnothing(implementation)
@@ -94,13 +93,12 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
     
     @info "Running benchmark with implementation '$implementation'"
 
-    bin_path = joinpath(cache_dir, build_hash)
+    bin_path = joinpath(CACHE_DIR, build_hash)
 
-    input_files_dir = joinpath(@__DIR__, "..", "config", "input_files")
     root_input_files_dirs = get_nested(CONFIG, ("paths", "input_file_dirs"), [])
 
     # Copy files from both directories to bin_path
-    for dir in [input_files_dir, root_input_files_dirs...]
+    for dir in [INPUT_FILES_DIR, root_input_files_dirs...]
         if isdir(dir)
             for file in readdir(dir)
                 src = joinpath(dir, file)
@@ -114,9 +112,9 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
         end
     end
     
-    mkpath(joinpath(cache_dir, "benchmark_logs"))
+    mkpath(joinpath(CACHE_DIR, "benchmark_logs"))
     cli_vars = CONFIG["parse_cli_variables"]
-    log_file = joinpath(cache_dir, "benchmark_logs", "$name-$template_hash-$time.log")
+    log_file = joinpath(CACHE_DIR, "benchmark_logs", "$name-$template_hash-$time.log")
     flags = parse_runtime_flags(template, implementation)
 
     args = [
@@ -135,10 +133,10 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
     @info "Command: $command"
     run_command_from_path(command, log_file, bin_path)
     try
-        mkpath(joinpath(output_dir, "csv", output_csv))
-        cp(joinpath(bin_path, output_csv), joinpath(output_dir, "csv", output_csv), force = true)
+        mkpath(output_dir)
+        cp(joinpath(bin_path, output_csv), joinpath(output_dir, output_csv), force = true)
     catch e
-        @error "Failed to retrieve $(joinpath(bin_path, output_csv)) to $(joinpath(output_dir, output_csv))'" exception=e
+        @error "Failed to copy $(joinpath(bin_path, output_csv)) to $(joinpath(output_dir, output_csv))'" exception=e
         exit(1)
     end
 
