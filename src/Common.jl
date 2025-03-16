@@ -29,22 +29,25 @@ function get_template(toml_data::Dict, name::String, visited::AbstractArray=[])
         push!(visited, name)
         get_template(toml_data, parent, visited)
     end
-
+    
     if !isnothing(parent_template) # Merge and overwrite with parent preset
         template = merge(parent_template, template)
         if haskey(parent_template, "cmake_inherits") && haskey(template, "cmake_inherits") # handle merging of cmake inherits
             template["cmake_inherits"] =
-                vcat(template["cmake_inherits"], setdiff(parent_template["cmake_inherits"], template["cmake_inherits"])) # append older parent's cmake inherits if
-                                                                                                                         # they don't exist yet
+            vcat(template["cmake_inherits"], setdiff(parent_template["cmake_inherits"], template["cmake_inherits"])) # append older parent's cmake inherits if
+            # they don't exist yet
         end
         if haskey(parent_template, "cache_vars") && haskey(template, "cache_vars") # handle merging of additional cache variables
             merge!(parent_template["cache_vars"], template["cache_vars"])
         end
     end
+    delete!(template, "inherits") # remove inheritance key, final merged template shouldn't have it anymore
+    
     return template
 end
 
-# Nested version will check for parents across all levels of nestedness
+# Nested version will check for parents across all levels of nestedness - NOT TESTED ON SPECIAL
+# cmake_inherits AND cache_vars BEHAVIOUR
 function get_template(toml_data::Dict, names::Tuple{Vararg{String}}, visited::AbstractArray=[])
     # Get the specified preset configuration
     template = get_nested(toml_data, names)
@@ -68,6 +71,8 @@ function get_template(toml_data::Dict, names::Tuple{Vararg{String}}, visited::Ab
             @error "Could not find key: '$parent' which is inherited by '$names[1]'"
             exit(1)
         end
+
+        delete!(template, "inherits") # remove inheritance key, final merged template shouldn't have it anymore
     end
 
     if length(parent_templates) > 1

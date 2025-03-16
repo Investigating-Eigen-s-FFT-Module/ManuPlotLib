@@ -1,16 +1,40 @@
 using SHA
 
-# Base function which takes 
-function parse_runtime_flag(template::Dict, key::String)
-    arg = get(template, key, nothing)
+# Base function which will return a set of strings corresponding
+# to the implementation binary flags and specified flag arguments
+# in the benchmark values.
+# In general we have in config.toml a key
+#   implementations.<implementation>.run_template_variables
+# ...specifying pairs:
+#   <flag> = <benchmark key>
+# The output for each pair is then:
+#   <flag>, <benchmark_template>[<benchmark key>]
+# if <benchmark_template>[<benchmark key>] is false/doesn't exist,
+# the flag is not added to the return vector
+function parse_runtime_flags(template::Dict, implementation::String)::Vector{String}
 
-    if isa(arg, AbstractArray)
+    # Parsing function for <benchmark_template>[<benchmark key>]
+    parse(arg) = if isa(arg, AbstractArray)
         join(arg, " ")
     elseif isa(arg, Bool)
-        arg ? arg : nothing
+        arg ? arg : nothing # false should return nothing for filter
     else
         arg
     end
+
+    # Gets flag to key map pairs for implementation (e.g ("-n", "nr_devices"))
+    flags = get_template(CONFIG,
+        ("implementations", implementation, "run_template_variables"))
+    # map keys to the value (e.g. ("-n", 1))
+    @show flags
+    flags = map(p -> (first(p), parse(template[last(p)])), collect(flags))
+    # filter flag value pairs out if value is false or nothing (unused flags)
+    flags = filter(p -> !isnothing(last(p)), flags)
+    # flatten pairs to a vector of strings
+    flags = collect(Iterators.flatten(flags))
+    flags = map(e -> string(e), flags)
+
+    return flags
 end
 
 function run_benchmark(template::Dict, name::String, build_hash::String,
@@ -31,8 +55,6 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
     end
 
     executable = get_nested(CONFIG, ("implementations", implementation, "binary"))
-    runtime_flags = get_template(CONFIG,
-        ("implementations", implementation, "run_template_variables"))
     
     @info "Running benchmark with implementation '$implementation'"
 
@@ -86,15 +108,7 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
     mkpath(joinpath(cache_dir, "benchmark_logs"))
     cli_vars = CONFIG["parse_cli_variables"]
     log_file = joinpath(cache_dir, "benchmark_logs", "$name-$template_hash-$time.log")
-    
-    # Gets flag to key map pairs (e.g ("-n", "nr_devices")),
-    # maps it to the runtime arg (e.g. ("-n", 1), filters them out
-    # if value is false or nothing (unused flags) and flattens
-    # them to a string
-    flags = map(p -> (first(p), parse_runtime_flag(template, last(p))), collect(runtime_flags))
-    flags = filter(p -> !isnothing(last(p)), flags)
-    flags = collect(Iterators.flatten(flags))
-    flags = map(e -> string(e), flags)
+    flags = parse_runtime_flags(template, implementation)
 
     args = [
         # implementation binary
@@ -110,7 +124,7 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
 
     command = Cmd(args)
 
-    @info "Comand: $command"
+    @info "Command: $command"
     run_command_from_path(command, log_file, bin_path)
     try
         mkpath(joinpath(output_dir, "csv", output_csv))
