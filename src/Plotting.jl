@@ -69,7 +69,8 @@ function create_plot(template::Dict{String,Any}, template_name::String,
     
     # Create a list to hold each subplot's axis
     axes = []
-    
+    meta_data_labels = template["meta_data_labels"]
+
     for ycol in ycols
         @info "Creating subplot for y column: $ycol"
         
@@ -138,9 +139,9 @@ function create_plot(template::Dict{String,Any}, template_name::String,
                     @info "Adding series '$group_label' to subplot"
                     
                     try
-                        if !template["combine_same_benchmark_data"] || group_label == ""
-                            @info "Adding tag to series label"
-                            group_label *= ", $(md["tag"])"
+                        for key in meta_data_labels
+                            @info "Adding metadata '$key' to series label"
+                            group_label *= ", $(md[key])"
                         end
                         
                         plot = if template["error_bar_method"] != "none"

@@ -1,6 +1,6 @@
 [base]
-cmake_inherits = ["release"] # base preset in gearshifft/CMakePresets.json
-# Build Settings
+cmake_inherits = ["release"] # REQUIRED: base preset in gearshifft/CMakePresets.json
+# Build Settings - mapping to CMake cache variables in config.toml
 nr_warmup      = 2
 nr_warm_runs   = 10
 error_bound    = -1 # -1 for dynamic error bound within gearshifft
@@ -11,7 +11,7 @@ cache_vars     = {} # Any other CMake cacheVariables as Pairs, e.g. {CMAKE_C_COM
 # Runtime Settings
 extents        = [] # gearshifft extents files (row-wise csv)
 verbose        = false
-# device = "cpu" not needed for now (gpu|cpu|acc|<ID>)
+device         = "cpu" # (gpu|cpu|acc|<ID>)
 nr_devices     = 1  # parallelism if supported, 0 = all
 inplace        = true  # run inplace benchmarks
 outplace       = true  # run outplace benchmarks
@@ -23,10 +23,10 @@ precision      = "all" # which precisions to benchmark
 [test-fftw]
 inherits = "base"
 implementation = "fftw"
-inplace = false
 extents = ["test.conf"]
 
 [test-eigen-fftw]
+inplace = false
 inherits = "test-fftw"
 implementation = "eigen_fftw"
 
@@ -39,3 +39,7 @@ precision = "double"
 [test-eigen-fftw-outplace-complex-double]
 inherits = "test-fftw-outplace-complex-double"
 implementation = "eigen_fftw"
+
+[test-fftw-plan-estimate]
+inherits = "test-fftw"
+plan_rigor = "estimate"

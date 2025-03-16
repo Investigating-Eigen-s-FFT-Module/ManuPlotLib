@@ -14,6 +14,7 @@ benchmark_templates = []           # List sets of benchmarks to compare, e.g. ["
 csv_count_per_benchmark = 1        # Number of CSV files to include for each benchmark template (<= 0 for max available)
 group_by_columns = ["library","inplace","complex","precision","dim"] # Which csv columns to group by besides x_values
                                                                      # for aggregation (see output csv for all options)
+meta_data_labels = []                                       # Which values from the output csv header to add to series labels
 x_values = ["Size_DeviceTransfer_bytes"]                    # Which values to plot against (1D only atm)
 y_values = ["Time_FFT_ms", "Time_iFFT_ms", "Time_Total_ms"] # Which values to plot ("Time_Allocation_ms","Time_PlanInitFwd_ms",
                                                             # "Time_PlanInitInv_ms","Time_Upload_ms","Time_FFT_ms","Time_iFFT_ms",
@@ -33,12 +34,12 @@ y_transform = "none"                      # Optional transform of the measured d
 [test]
 inherits = "base"
 x_label = "[MiB]"
-y_label = "[P/ms]"
-y_scale = "linear"
+y_label = "[ms]"
 x_transform = "B_to_MiB"
 y_transform = "fft_perf"
-benchmark_templates = ["test-eigen-fftw-outplace-complex-double"]
-csv_count_per_benchmark = 2
-combine_same_benchmark_data = false
-y_values = ["Time_FFT_ms"]
+group_by_columns = ["library","inplace","complex","precision","dim"]
+benchmark_templates = ["test-fftw", "test-fftw-plan-estimate"]
+csv_count_per_benchmark = 1
+combine_same_benchmark_data = true
 error_bar_method = "quantiles"
+meta_data_labels = ["tag", "PlanRigor"]
