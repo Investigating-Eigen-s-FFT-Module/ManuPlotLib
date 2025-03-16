@@ -26,6 +26,7 @@ input_file_dirs    = ["share/gearshifft"]        # set of dirs, whose contents s
 "GEARSHIFFT_DUMP_FREQUENCY"    = "dump_frequency"
 "GEARSHIFFT_LLC_SIZE_MIB"      = "llc_mib"
 "GEARSHIFFT_CACHE_LINE_SIZE_B" = "cl_mb"
+"GEARSHIFFT_BACKEND_EIGEN_USE_TEST" = "test_my_version"
 
 # TODO: allow for implementation-specific build_template_variable mappings
 
