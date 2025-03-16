@@ -1,6 +1,34 @@
 using SHA
 
-# Base function which will return a set of strings corresponding
+include("../config/CustomParsers.jl") # Register custom parsers to CUSTOM_FLAG_PARSER here
+
+# Parsing function for `parse_runtime_flags`, by default:
+# <benchmark_template>[<benchmark key>] is returned as
+# - a join over " " if it is an array
+# - nothing if it is false
+# - <benchmark_template>[<benchmark key>] else
+# The default behaviour can be overridden by registering
+# a function to CUSTOM_FLAG_PARSER with the key being the
+# specific flag for which custom parsing behaviour is needed.
+function parse(template::Dict, flag_key::Pair)
+    flag, key = flag_key
+    custom_parse = get(CUSTOM_FLAG_PARSER, flag, nothing)
+    if !isnothing(custom_parse)
+        return (flag, custom_parse(template, key))
+    else
+        arg = template[key]
+        value = if isa(arg, AbstractArray)
+            join(arg, " ")
+        elseif isa(arg, Bool)
+            arg ? arg : nothing # false should return nothing for filter
+        else
+            arg
+        end
+    end
+    return (flag, value)
+end
+
+# Return a set of strings corresponding
 # to the implementation binary flags and specified flag arguments
 # in the benchmark values.
 # In general we have in config.toml a key
@@ -10,24 +38,14 @@ using SHA
 # The output for each pair is then:
 #   <flag>, <benchmark_template>[<benchmark key>]
 # if <benchmark_template>[<benchmark key>] is false/doesn't exist,
-# the flag is not added to the return vector
+# the flag is not added to the return vector.
 function parse_runtime_flags(template::Dict, implementation::String)::Vector{String}
-
-    # Parsing function for <benchmark_template>[<benchmark key>]
-    parse(arg) = if isa(arg, AbstractArray)
-        join(arg, " ")
-    elseif isa(arg, Bool)
-        arg ? arg : nothing # false should return nothing for filter
-    else
-        arg
-    end
 
     # Gets flag to key map pairs for implementation (e.g ("-n", "nr_devices"))
     flags = get_template(CONFIG,
         ("implementations", implementation, "run_template_variables"))
     # map keys to the value (e.g. ("-n", 1))
-    @show flags
-    flags = map(p -> (first(p), parse(template[last(p)])), collect(flags))
+    flags = map(p -> parse(template, p), collect(flags))
     # filter flag value pairs out if value is false or nothing (unused flags)
     flags = filter(p -> !isnothing(last(p)), flags)
     # flatten pairs to a vector of strings
@@ -58,34 +76,6 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
     
     @info "Running benchmark with implementation '$implementation'"
 
-    extents::AbstractArray = template["extents"]
-    (length(extents) == 0) && error("Benchmark template '$name' doesn't have any extents files specified")
-
-    # translate following params to wildcard syntax
-    benchmarks_string = try
-        inplace::Bool          = template["inplace"]
-        outplace::Bool         = template["outplace"]
-        real::Bool             = template["real"]
-        complex::Bool          = template["complex"]
-        precision::String      = template["precision"]
-
-        benchmarks_string = "*/"
-        benchmarks_string *= (precision == "all" ? "*/*/" : "$precision/*/") # second '*' is extent, which is not specified
-        benchmarks_string *= (inplace && outplace ? "*_" : (inplace ? "Inplace_" : "Outplace_"))
-        benchmarks_string *= (real && complex ? "*" : (real ? "Real" : "Complex"))
-
-        if !(inplace || outplace)
-            throw(ArgumentError("Both inplace and outplace benchmarks set to false in benchmark template '$name'"))
-        elseif !(real || complex)
-            throw(ArgumentError("Both real and complex benchmarks set to false in benchmark template '$name'"))
-        end
-
-        benchmarks_string
-    catch e
-        @error "Failed to parse runtime benchmarks string"
-        showerror(stdout, e)
-        exit(1)
-    end 
     bin_path = joinpath(cache_dir, build_hash)
 
     extents_dir = joinpath(@__DIR__, "..", "config", "extents")
@@ -115,7 +105,6 @@ function run_benchmark(template::Dict, name::String, build_hash::String,
         "./$executable",
         # runtime flags of binary
         flags...,
-        "-r", benchmarks_string,
         # obligatory runtime flags set by ParseCli.jl
         cli_vars["benchmark_tag"],
             isnothing(tag) ? join([name, time], "@") : tag, # default tag is name and time in csv

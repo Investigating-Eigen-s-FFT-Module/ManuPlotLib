@@ -36,14 +36,13 @@ cache_dir          = ".cache/"                   # default place to cache inform
 "-n" = "nr_devices"
 "-v" = "verbose"
 # Flags that don't follow the pattern
-# `./<implementation> <flag>=template[<key>]`
-# can also be specified but require a customized
-# julia extension of the basic "run_benchmark"
-# function. Extensions are declared in
+# `./<implementation> <flag>=template[<key>]` or
+# `./<implementation> <flag>=join(template[<key>], " ")`
+# can also be specified but require a custom function
+# to translate template[<key>] to the the flag argument.
+# Custom functions can be added to
 # 'config/BenchmmarkingExtensions.jl'
-# "-r" = ["inplace, outplace, real, complex, precision"]
-
-
+"-r" = ["inplace", "outplace", "real", "complex", "precision"]
 
 # Mapping from implementation key
 # to different implementations (output binaries)
