@@ -1,7 +1,7 @@
 [paths]
 benchmark_repo_root    = "../gearshifft"         # root of benchmark repo relative to GearshifftEvaluation root dir
-benchmark_templates_path = "templates/gearshifft_benchmark_templates.toml" # location of benchmark templates relative to root
-plot_templates_path = "templates/gearshifft_plot_templates.toml" # location of plot templates relative to root
+benchmark_templates_path = "gearshifft_benchmark.toml" # location of benchmark templates relative to root/templates
+plot_templates_path = "gearshifft_plot.toml" # location of plot templates relative to root/templates
 output_dir         = "output_gearshifft/"                   # dir to store program outputs (plots etc.)
 cache_dir          = ".cache_gearshifft/"                   # dir to cache information
 input_file_dirs    = ["share/gearshifft"]        # set of dirs, whose contents should be in the working directory of
@@ -95,3 +95,8 @@ input_file_dirs    = ["share/gearshifft"]        # set of dirs, whose contents s
 "benchmark_tag" = "-t"
 "output_file" = "-o" # can be '>' if implemementation binary
                      # prints csv to stdout
+
+# If needed, add mapping to custom parsers for certain runtime flags.
+# Custom parsers are defined in CustomParsers.jl
+[custom_flag_parser]
+"-r" = "gearshifft_benchmark_string"
