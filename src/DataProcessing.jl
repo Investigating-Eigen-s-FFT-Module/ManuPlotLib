@@ -105,7 +105,7 @@ function gather_data(template::Dict{String,Any}, run_hash::String, tag=nothing)
     meta_list = []
     data_list = []
     for pf in parsed_files
-        meta_data, data = read_gearshifft_results_csv(joinpath(data_dir, pf.file))
+        meta_data, data = read_gearshifft_results_csv(template, joinpath(data_dir, pf.file))
         if !isnothing(tag)
             if ismatch(Regex(tag), meta_data["tag"])
                 push!(meta_list, meta_data)
@@ -122,6 +122,7 @@ function gather_data(template::Dict{String,Any}, run_hash::String, tag=nothing)
     num_files = template["csv_count_per_benchmark"] <= 0 ? length(meta_list) : template["csv_count_per_benchmark"]
     meta_list = first(meta_list, min(num_files, length(meta_list)))
     data_list = first(data_list, min(num_files, length(data_list)))
+    @show data_list
 
     if template["combine_same_benchmark_data"]
         return (meta_list, [reduce(vcat, data_list)])
@@ -130,7 +131,7 @@ function gather_data(template::Dict{String,Any}, run_hash::String, tag=nothing)
     end
 end
 
-function read_gearshifft_results_csv(filename::String)
+function read_gearshifft_results_csv(template::Dict, filename::String)
     lines = readlines(filename)
     # Separate commented (meta) lines from data lines
     meta_lines = filter(line -> startswith(strip(line), ";"), lines)
@@ -155,12 +156,16 @@ function read_gearshifft_results_csv(filename::String)
     # Parse main data (filter out warmup)
     data = CSV.read(IOBuffer(join(data_lines, "\n")), DataFrame; normalizenames=true)
     rename!(data, Dict(col => Symbol(rstrip(string(col), '_')) for col in names(data)))
-    filter!(data) do row
-        row.success != "Warmup"
+    for (key, value) in template["row_filter"]
+        filter!(data) do row
+            row[key] != value
+        end
     end
-
-    if any(row -> row.success != "Success", eachrow(data))
-        @warn "Found failed run in dataset: '$filename'"
+    
+    for (key, value) in template["fail_warn"]
+        if any(row -> row[key] == value, eachrow(data))
+            @warn "Found failed run in dataset: '$filename'"
+        end
     end
 
     return meta_info, data

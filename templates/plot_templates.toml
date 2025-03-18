@@ -22,6 +22,8 @@ y_values = ["Time_FFT_ms", "Time_iFFT_ms", "Time_Total_ms"] # Which values to pl
                                                             # "Error_StandardDeviation", "Error_Mismatches")
 
 # Data processing
+row_filter = {success = "Warmup"}         # Filter out rows that contain the value at column key
+fail_warn = {success = "Skipped"}         # Produce a warning if a row contains this value at column key
 combine_same_benchmark_data = true        # Use true to merge data from the same benchmark into one curve
 aggregation_function = "mean"             # Possible choices: "mean", "median", "min", "max"
 error_bar_method = "none"                 # Possible choices: "std_dev", "quantiles", "max_dev", "none"
@@ -38,8 +40,8 @@ y_label = "[ms]"
 x_transform = "B_to_MiB"
 y_transform = "fft_perf"
 group_by_columns = ["library","inplace","complex","precision","dim"]
-benchmark_templates = ["test-fftw", "test-fftw-plan-estimate"]
+benchmark_templates = ["test-fftw"]
 csv_count_per_benchmark = 1
-combine_same_benchmark_data = true
+combine_same_benchmark_data = false
 error_bar_method = "quantiles"
 meta_data_labels = ["tag", "PlanRigor"]
