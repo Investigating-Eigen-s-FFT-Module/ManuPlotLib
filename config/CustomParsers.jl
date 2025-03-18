@@ -28,7 +28,7 @@ function gearshifft_benchmark_string(template::Dict, val::AbstractArray{String})
             throw(ArgumentError("Both real and complex benchmarks set to false in benchmark template '$name'"))
         end
         
-        benchmarks_string
+        "\"" * benchmarks_string * "\""
     catch e
         @error "Failed to parse runtime benchmarks string" e
         exit(1)
