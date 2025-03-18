@@ -10,13 +10,23 @@ fftw = "OFF"
 mkl = "OFF"
 cache_vars     = {} # Any other CMake cacheVariables as Pairs, e.g. {CMAKE_C_COMPILER = "gcc", ...}
 # Runtime Settings
-extents        = []
+extents        = ["test.conf"]
 real           = true  # run r2c/c2r benchmarks
 complex        = true  # run c2c benchmarks
 reps = 10
 
-[test]
+[test-fftwd]
 inherits = "base"
 implementation = "fftwd"
 fftw = "ON"
-extents = ["test.conf"]
+[test-fftwf]
+inherits = "test-fftwd"
+implementation = "fftwf"
+
+[test-kissfftd]
+inherits = "base"
+implementation = "kissfftd"
+kissfft = "ON"
+[test-kissfftf]
+inherits = "test-kissfftd"
+implementation = "kissfftf"

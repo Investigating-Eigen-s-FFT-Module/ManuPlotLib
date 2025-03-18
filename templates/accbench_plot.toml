@@ -2,26 +2,28 @@
 # Basics
 x_scale = "log"                     # Possible values: "log", "linear"
 x_dir   = "normal"                  # Possible values: "normal", "reverse"
-y_scale = "log"                     # Possible values: "log", "linear"
+y_scale = "linear"                     # Possible values: "log", "linear"
 y_dir   = "normal"                  # Possible values: "normal", "reverse"
 x_log_basis = 2
 y_log_basis = 10
 x_label = "[Bytes]"                 # Label for the x-axis
-y_label = "[ms]"                    # Label for the y-axis
+y_label = "L2 Error"                    # Label for the y-axis
 
 # Benchmark output selection
 benchmark_templates = []           # List sets of benchmarks to compare, e.g. ["benchA", "benchB"]
 csv_count_per_benchmark = 1        # Number of CSV files to include for each benchmark template (<= 0 for max available)
-group_by_columns = ["library","inplace","complex","precision","dim"] # Which csv columns to group by besides x_values
+group_by_columns = ["dim","complex"] # Which csv columns to group by besides x_values
                                                                      # for aggregation (see output csv for all options)
-meta_data_labels = []                                       # Which values from the output csv header to add to series labels
-x_values = ["Size_DeviceTransfer_bytes"]                    # Which values to plot against (1D only atm)
-y_values = ["Time_FFT_ms", "Time_iFFT_ms", "Time_Total_ms"] # Which values to plot ("Time_Allocation_ms","Time_PlanInitFwd_ms",
+meta_data_labels = ["backend", "precision", "Threads"]                                       # Which values from the output csv header to add to series labels
+x_values = ["size_bytes"]                    # Which values to plot against (1D only atm)
+y_values = ["err_L2_norm"] # Which values to plot ("Time_Allocation_ms","Time_PlanInitFwd_ms",
                                                             # "Time_PlanInitInv_ms","Time_Upload_ms","Time_FFT_ms","Time_iFFT_ms",
                                                             # "Time_Download_ms","Time_PlanDestroy_ms","Time_Total_ms",
                                                             # "Error_StandardDeviation", "Error_Mismatches")
 
 # Data processing
+row_filter = {}         # Filter out rows that contain the value at column key
+fail_warn = {}         # Produce a warning if a row contains this value at column key
 combine_same_benchmark_data = true        # Use true to merge data from the same benchmark into one curve
 aggregation_function = "mean"             # Possible choices: "mean", "median", "min", "max"
 error_bar_method = "none"                 # Possible choices: "std_dev", "quantiles", "max_dev", "none"
@@ -31,15 +33,6 @@ x_transform = "none"                      # Optional transform of the x-axis (cu
 y_transform = "none"                      # Optional transform of the measured data on the y-axis
                                           # (currently just 'fft_perf' to compute FFT performance)
 
-[test]
+[fftwd-vs-kissfftd]
 inherits = "base"
-x_label = "[MiB]"
-y_label = "[ms]"
-x_transform = "B_to_MiB"
-y_transform = "fft_perf"
-group_by_columns = ["library","inplace","complex","precision","dim"]
-benchmark_templates = ["test-fftw", "test-fftw-plan-estimate"]
-csv_count_per_benchmark = 1
-combine_same_benchmark_data = true
-error_bar_method = "quantiles"
-meta_data_labels = ["tag", "PlanRigor"]
+benchmark_templates = ["test-fftwd", "test-kissfftd"]
