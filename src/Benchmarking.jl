@@ -37,7 +37,10 @@ end
 #   <flag> = <benchmark key>
 # The output for each pair is then:
 #   <flag>, <benchmark_template>[<benchmark key>]
-# if <benchmark_template>[<benchmark key>] is false/doesn't exist,
+# or:
+#   <flag>
+# if <benchmark_template>[<benchmark key>] is just true.
+# If <benchmark_template>[<benchmark key>] is false/doesn't exist,
 # the flag is not added to the return vector.
 function parse_runtime_flags(template::Dict, implementation::String)::Vector{String}
 
@@ -64,12 +67,16 @@ function parse_runtime_flags(template::Dict, implementation::String)::Vector{Str
 
     # map keys to the value (e.g. ("-n", 1))
     flags = map(p -> parse(template, p), collect(flags))
-    # filter flag value pairs out if value is false or nothing (unused flags)
+    # filter flag value pairs out if value is nothing (unused flags)
     flags = filter(p -> !isnothing(last(p)), flags)
-    # flatten pairs to a vector of strings
+    # flatten pairs to a vector of single elements
     flags = collect(Iterators.flatten(flags))
+    # filter 'true' (option flags that have no argument
+    # 'false' shouldn't be present at this point)
+    flags = filter(e -> !isa(e, Bool), flags)
+    # map remaining elements to string
     flags = map(e -> string(e), flags)
-
+    @show flags
     return flags
 end
 
@@ -128,7 +135,7 @@ function run_benchmark(template::Dict, name::String, build_hash::String, tag=not
         cli_vars["output_file"], output_csv
     ]
 
-    command = Cmd(args)
+    command = Cmd(`sh -c $(join(args, " "))`)
 
     @info "Command: $command"
     run_command_from_path(command, log_file, bin_path)
