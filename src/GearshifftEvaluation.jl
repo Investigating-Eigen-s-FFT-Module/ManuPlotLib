@@ -11,6 +11,8 @@ include("Plotting.jl")
 
 function main()
     args = parse_commandline()
+
+    load_config(args["config_file"])
     benchmark_template_names = args["benchmark_template"]
     plot_template_name = args["plot_template"]
     

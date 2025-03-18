@@ -76,7 +76,7 @@ function parse_runtime_flags(template::Dict, implementation::String)::Vector{Str
     flags = filter(e -> !isa(e, Bool), flags)
     # map remaining elements to string
     flags = map(e -> string(e), flags)
-    @show flags
+
     return flags
 end
 

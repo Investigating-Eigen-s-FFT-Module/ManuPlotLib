@@ -33,6 +33,11 @@ function parse_commandline()
         "--plot-tag", "-T"
             help = "Specify a regex pattern to filter output csv files by their tag (in metadata of csv)"
             default = nothing
+            group = :plot_opt
+        "--config-file", "-c"
+            help = "Specify a config TOML file"
+            arg_type = String
+            default = "config/config.toml"
     end
     args = try
         parse_args(s)

@@ -2,22 +2,28 @@ using TOML
 using SHA
 
 const PROJECT_ROOT = joinpath(@__DIR__, "..")
-const CONFIG_PATH = joinpath(PROJECT_ROOT, "config")
-const BENCHMARK_TEMPLATES_PATH = joinpath(PROJECT_ROOT, "templates", "benchmark_templates.toml")
-const INPUT_FILES_DIR = joinpath(CONFIG_PATH, "input_files")
+CONFIG_PATH::String = ""
+CONFIG::Dict = Dict()
+CONFIG_PATHS::Dict = Dict()
+PLOT_TEMPLATES_PATH::String = ""
+BENCHMARK_TEMPLATES_PATH::String = ""
+CACHE_DIR::String = ""
+BENCHMARK_ROOT::String = ""
+INPUT_FILES_DIR::String = ""
+OUTPUT_DIR::String = ""
 
-# Load default config values
-function load_config()::Dict
-    config_path = joinpath(CONFIG_PATH, "config.toml")
-    return TOML.parsefile(config_path)
+# Load config values
+function load_config(path::String)
+    global CONFIG_PATH = joinpath(pwd(), path)
+    global CONFIG = TOML.parsefile(CONFIG_PATH)
+    global CONFIG_PATHS = CONFIG["paths"] 
+    global PLOT_TEMPLATES_PATH = joinpath(PROJECT_ROOT, CONFIG_PATHS["plot_templates_path"])
+    global BENCHMARK_TEMPLATES_PATH = joinpath(PROJECT_ROOT, CONFIG_PATHS["benchmark_templates_path"])
+    global CACHE_DIR = joinpath(PROJECT_ROOT, CONFIG_PATHS["cache_dir"])
+    global BENCHMARK_ROOT = joinpath(PROJECT_ROOT, CONFIG_PATHS["benchmark_repo_root"])
+    global INPUT_FILES_DIR = joinpath(dirname(CONFIG_PATH), "input_files")
+    global OUTPUT_DIR = joinpath(PROJECT_ROOT, CONFIG_PATHS["output_dir"])
 end
-
-const CONFIG = load_config()
-const CONFIG_PATHS = CONFIG["paths"] 
-const PLOT_TEMPLATES_PATH = joinpath(PROJECT_ROOT, "templates", "plot_templates.toml")
-const CACHE_DIR = joinpath(PROJECT_ROOT, CONFIG_PATHS["cache_dir"])
-const BENCHMARK_ROOT = joinpath(PROJECT_ROOT, CONFIG_PATHS["benchmark_repo_root"])
-const OUTPUT_DIR = joinpath(PROJECT_ROOT, CONFIG_PATHS["output_dir"])
 
 function get_nested(toml_data::Dict, keys::Tuple, default=nothing)
     value = toml_data

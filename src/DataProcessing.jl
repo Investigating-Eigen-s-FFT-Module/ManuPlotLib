@@ -122,7 +122,7 @@ function gather_data(template::Dict{String,Any}, run_hash::String, tag=nothing)
     num_files = template["csv_count_per_benchmark"] <= 0 ? length(meta_list) : template["csv_count_per_benchmark"]
     meta_list = first(meta_list, min(num_files, length(meta_list)))
     data_list = first(data_list, min(num_files, length(data_list)))
-    @show data_list
+
 
     if template["combine_same_benchmark_data"]
         return (meta_list, [reduce(vcat, data_list)])

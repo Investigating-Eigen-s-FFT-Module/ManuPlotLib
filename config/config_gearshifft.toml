@@ -1,9 +1,11 @@
 [paths]
 benchmark_repo_root    = "../gearshifft"         # root of benchmark repo relative to GearshifftEvaluation root dir
-output_dir         = "output/"                   # default place to store program outputs (plots etc.)
-cache_dir          = ".cache/"                   # default place to cache information
+benchmark_templates_path = "templates/gearshifft_benchmark_templates.toml" # location of benchmark templates relative to root
+plot_templates_path = "templates/gearshifft_plot_templates.toml" # location of plot templates relative to root
+output_dir         = "output_gearshifft/"                   # dir to store program outputs (plots etc.)
+cache_dir          = ".cache_gearshifft/"                   # dir to cache information
 input_file_dirs    = ["share/gearshifft"]        # set of dirs, whose contents should be in the working directory of
-                                                 # the benchmark binary. Relative to gearshifft_root
+                                                 # the benchmark binary. Relative to benchmark_repo_root
 
 # Defines parameters for injected CMakeUserPresets.json
 # of benchmarking repo. Only relevant if the benchmarking
