@@ -17,8 +17,9 @@ function parse_commandline()
 
     @add_arg_table! s begin
         "--benchmark-template", "-b"
-            help = "Run a benchmark template from templates/benchmark_templates.toml"
+            help = "Run benchmark templates from templates/benchmark_templates.toml"
             arg_type = String
+            nargs = '+'
             default = nothing
             group = :actions
         "--plot-template", "-p"
