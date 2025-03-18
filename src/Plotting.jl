@@ -78,11 +78,17 @@ function create_plot(template::Dict{String,Any}, template_name::String,
         # md_vec contains the corresponding set of csv metadata info from the csv(s)
         
         # First determine unique identifiers based on group column names to build legend labels
-        # and titles
         group_col_entries = DataFrame([name => [] for name in  group_cols])
         for df_vec in agg_data_list 
             for df in df_vec
                 append!(group_col_entries, unique(eachrow(df[:, group_cols])))
+            end
+        end
+        # Next do the same for specified meta data labels
+        meta_data_entries = DataFrame([key => [] for key in meta_data_labels])
+        for md_vec in meta_data_list
+            for md in md_vec
+                append!(meta_data_entries, DataFrame([key => [md[key]] for key in meta_data_labels]))
             end
         end
         
@@ -96,6 +102,17 @@ function create_plot(template::Dict{String,Any}, template_name::String,
             end
         end
         @info "Identifying column entries for subplot are:\n$(join(different_entry_cols, "\n"))"
+
+        # Determine metadata keys with different entries
+        different_meta_keys = [] # entries will be in label
+        
+        for (key, col) in zip(names(meta_data_entries), eachcol(meta_data_entries))
+            unique_entries = unique(col)
+            if length(unique_entries) != 1
+            push!(different_meta_keys, key)
+            end
+        end
+        @info "Identifying metadata keys with different entries for subplot are:\n$(join(different_meta_keys, "\n"))"
 
         # Create a new axis for each y column
         ycol_axis = @pgf Axis(
@@ -139,7 +156,7 @@ function create_plot(template::Dict{String,Any}, template_name::String,
                     @info "Adding series '$group_label' to subplot"
                     
                     try
-                        for key in meta_data_labels
+                        for key in different_meta_keys
                             @info "Adding metadata '$key' to series label"
                             group_label *= ", $(md[key])"
                         end

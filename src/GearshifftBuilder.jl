@@ -108,7 +108,7 @@ function build(template::Dict, name::String)
     # Symlink gearshifft root if not already done
     gearshifft_path = joinpath(CACHE_DIR, "gearshifft")
     if !isdir(gearshifft_path)
-        @info "Creating symlink to '$PROJECT_ROOT'"
+        @info "Creating symlink to '$BENCHMARK_ROOT'"
         symlink(BENCHMARK_ROOT, gearshifft_path, dir_target = true)
     end
 
