@@ -11,18 +11,36 @@ CACHE_DIR::String = ""
 BENCHMARK_ROOT::String = ""
 INPUT_FILES_DIR::String = ""
 OUTPUT_DIR::String = ""
+CUSTOM_FLAG_PARSER = Dict()
 
 # Load config values
 function load_config(path::String)
-    global CONFIG_PATH = joinpath(pwd(), path)
+    global CONFIG_PATH = joinpath(PROJECT_ROOT, "config", path)
     global CONFIG = TOML.parsefile(CONFIG_PATH)
     global CONFIG_PATHS = CONFIG["paths"] 
-    global PLOT_TEMPLATES_PATH = joinpath(PROJECT_ROOT, CONFIG_PATHS["plot_templates_path"])
-    global BENCHMARK_TEMPLATES_PATH = joinpath(PROJECT_ROOT, CONFIG_PATHS["benchmark_templates_path"])
+    global PLOT_TEMPLATES_PATH = joinpath(PROJECT_ROOT, "templates", CONFIG_PATHS["plot_templates_path"])
+    global BENCHMARK_TEMPLATES_PATH = joinpath(PROJECT_ROOT, "templates", CONFIG_PATHS["benchmark_templates_path"])
     global CACHE_DIR = joinpath(PROJECT_ROOT, CONFIG_PATHS["cache_dir"])
     global BENCHMARK_ROOT = joinpath(PROJECT_ROOT, CONFIG_PATHS["benchmark_repo_root"])
     global INPUT_FILES_DIR = joinpath(dirname(CONFIG_PATH), "input_files")
     global OUTPUT_DIR = joinpath(PROJECT_ROOT, CONFIG_PATHS["output_dir"])
+    global CUSTOM_FLAG_PARSER = CONFIG["custom_flag_parser"]
+end
+
+# Convert a string to a function name and call it
+function call_function_by_name(func_name::String, args...)
+    func = try
+        getfield(@__MODULE__, Symbol(func_name))
+    catch e
+        @error "Function '$func_name' is not defined or is not a function." e
+        exit(1)
+    end
+
+    try
+        func(args...)
+    catch e
+        @error "Call to function '$func_name' failed" e
+    end
 end
 
 function get_nested(toml_data::Dict, keys::Tuple, default=nothing)

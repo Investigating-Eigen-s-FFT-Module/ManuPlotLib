@@ -37,7 +37,7 @@ function parse_commandline()
         "--config-file", "-c"
             help = "Specify a config TOML file"
             arg_type = String
-            default = "config/config.toml"
+            default = "config.toml"
     end
     args = try
         parse_args(s)

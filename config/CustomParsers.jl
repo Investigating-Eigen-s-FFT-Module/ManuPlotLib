@@ -34,7 +34,3 @@ function gearshifft_benchmark_string(template::Dict, val::AbstractArray{String})
         exit(1)
     end
 end
-
-const CUSTOM_FLAG_PARSER = Dict(
-    "-r" => gearshifft_benchmark_string
-)

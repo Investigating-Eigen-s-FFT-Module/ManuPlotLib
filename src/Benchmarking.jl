@@ -1,6 +1,6 @@
 using SHA
 
-include("../config/CustomParsers.jl") # Register custom parsers to CUSTOM_FLAG_PARSER here
+include("../config/CustomParsers.jl") # Create custom parsers here
 
 # Parsing function for `parse_runtime_flags`, by default:
 # <benchmark_template>[<benchmark key>] is returned as
@@ -8,13 +8,13 @@ include("../config/CustomParsers.jl") # Register custom parsers to CUSTOM_FLAG_P
 # - nothing if it is false
 # - <benchmark_template>[<benchmark key>] else
 # The default behaviour can be overridden by registering
-# a function to CUSTOM_FLAG_PARSER with the key being the
+# a function to custom_flag_parser in the config toml with the key being the
 # specific flag for which custom parsing behaviour is needed.
 function parse(template::Dict, flag_key::Pair)
     flag, key = flag_key
     custom_parse = get(CUSTOM_FLAG_PARSER, flag, nothing)
     if !isnothing(custom_parse)
-        return (flag, custom_parse(template, key))
+        return (flag, call_function_by_name(custom_parse, template, key))
     else
         arg = get(template, key, nothing)
         value = if isa(arg, AbstractArray)
