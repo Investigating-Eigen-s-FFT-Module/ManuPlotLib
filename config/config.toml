@@ -1,5 +1,5 @@
 [paths]
-gearshifft_root    = "../gearshifft"             # root of gearshifft repo relative to GearshifftEvaluation root dir
+benchmark_repo_root    = "../gearshifft"         # root of benchmark repo relative to GearshifftEvaluation root dir
 output_dir         = "output/"                   # default place to store program outputs (plots etc.)
 cache_dir          = ".cache/"                   # default place to cache information
 input_file_dirs    = ["share/gearshifft"]        # set of dirs, whose contents should be in the working directory of
@@ -49,18 +49,19 @@ input_file_dirs    = ["share/gearshifft"]        # set of dirs, whose contents s
 "-r" = ["inplace", "outplace", "real", "complex", "precision"]
 
 # Mapping from implementation key
-# to different implementations (output binaries)
+# to different implementations
+# ! output binaries *relative to* build folder
 [implementations]
 [implementations.fftw]
-"binary" = "gearshifft_fftw"
+"binary" = "gearshifft/gearshifft_fftw"
 [implementations.eigen_fftw]
-"binary" = "gearshifft_eigen_fftw"
+"binary" = "gearshifft/gearshifft_eigen_fftw"
 [implementations.eigen_kissfft]
-"binary" = "gearshifft_eigen_kissfft"
+"binary" = "gearshifft/gearshifft_eigen_kissfft"
 [implementations.eigen_mkl]
-"binary" = "gearshifft_eigen_mkl"
+"binary" = "gearshifft/gearshifft_eigen_mkl"
 [implementations.eigen_pocketfft]
-"binary" = "gearshifft_eigen_pocketfft"
+"binary" = "gearshifft/gearshifft_eigen_pocketfft"
 
 # TODO: make these optional if they just inherit base
 # Usually, all specified implementation

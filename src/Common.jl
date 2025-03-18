@@ -16,7 +16,7 @@ const CONFIG = load_config()
 const CONFIG_PATHS = CONFIG["paths"] 
 const PLOT_TEMPLATES_PATH = joinpath(PROJECT_ROOT, "templates", "plot_templates.toml")
 const CACHE_DIR = joinpath(PROJECT_ROOT, CONFIG_PATHS["cache_dir"])
-const BENCHMARK_ROOT = joinpath(PROJECT_ROOT, CONFIG_PATHS["gearshifft_root"])
+const BENCHMARK_ROOT = joinpath(PROJECT_ROOT, CONFIG_PATHS["benchmark_repo_root"])
 const OUTPUT_DIR = joinpath(PROJECT_ROOT, CONFIG_PATHS["output_dir"])
 
 function get_nested(toml_data::Dict, keys::Tuple, default=nothing)
