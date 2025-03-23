@@ -88,7 +88,7 @@ function create_plot(template::Dict{String,Any}, template_name::String,
         meta_data_entries = DataFrame([key => [] for key in meta_data_labels])
         for md_vec in meta_data_list
             for md in md_vec
-                append!(meta_data_entries, DataFrame([key => [md[key]] for key in meta_data_labels]))
+                append!(meta_data_entries, DataFrame([key => [get(md, key, nothing)] for key in meta_data_labels]))
             end
         end
         
@@ -158,7 +158,8 @@ function create_plot(template::Dict{String,Any}, template_name::String,
                     try
                         for key in different_meta_keys
                             @info "Adding metadata '$key' to series label"
-                            group_label *= ", $(md[key])"
+                            label = get(md, key, "N/A")
+                            group_label *= ", $key=$label"
                         end
                         
                         plot = if template["error_bar_method"] != "none"
