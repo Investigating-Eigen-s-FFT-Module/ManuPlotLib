@@ -143,6 +143,13 @@ function create_plot(template::Dict{String,Any}, template_name::String,
             )
         end
 
+        if template["scatter"]
+            push!(ycol_axis.options,
+                "only marks",
+                "mark options = {scale=0.8}"
+            )
+        end
+
         # Run through dfs again and create curves
         for (df_vec, md_vec) in zip(agg_data_list, meta_data_list)
             for (df, md) in zip(df_vec, md_vec)
