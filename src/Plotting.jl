@@ -146,7 +146,7 @@ function create_plot(template::Dict{String,Any}, template_name::String,
         if template["scatter"]
             push!(ycol_axis.options,
                 "only marks",
-                "mark options = {scale=0.8}"
+                "mark options = {scale=0.3}"
             )
         end
 
