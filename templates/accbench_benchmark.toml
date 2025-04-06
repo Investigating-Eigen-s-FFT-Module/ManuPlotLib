@@ -13,20 +13,30 @@ cache_vars     = {} # Any other CMake cacheVariables as Pairs, e.g. {CMAKE_C_COM
 extents        = ["test.conf"]
 real           = true  # run r2c/c2r benchmarks
 complex        = true  # run c2c benchmarks
-reps = 10
+reps = 1
 
-[test-fftwd]
+# 1D serial primes benchmarks
+[base-1D-prime]
 inherits = "base"
-implementation = "fftwd"
-fftw = "ON"
-[test-fftwf]
-inherits = "test-fftwd"
-implementation = "fftwf"
+float = "OFF"
+extents = ["1d_primes.conf"]
 
-[test-kissfftd]
-inherits = "base"
-implementation = "kissfftd"
+[eigen-kissfft-prime]
+inherits = "base-1D-prime"
 kissfft = "ON"
-[test-kissfftf]
-inherits = "test-kissfftd"
-implementation = "kissfftf"
+implementation = "kissfftd"
+
+[eigen-pocketfft-prime]
+inherits = "base-1D-prime"
+pocketfft = "ON"
+implementation = "pocketfftd"
+
+[eigen-mkl-prime]
+inherits = "base-1D-prime"
+mkl = "ON"
+implementation = "mkld"
+
+[eigen-fftw-prime]
+inherits = "base-1D-prime"
+fftw = "ON"
+implementation = "fftwd"

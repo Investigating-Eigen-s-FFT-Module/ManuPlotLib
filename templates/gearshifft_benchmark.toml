@@ -1,14 +1,14 @@
 [base]
 cmake_inherits = ["release"] # REQUIRED: base preset in gearshifft/CMakePresets.json
 # Build Settings - mapping to CMake cache variables in config.toml
-nr_warmup      = 2
-nr_warm_runs   = 10
+nr_warmup      = 5
+nr_warm_runs   = 20
 error_bound    = -1 # -1 for dynamic error bound within gearshifft
-dump_frequency = 1  # Number of benchmarks results to collect before dumping to backup file
-llc_mib        = 32 # Size of the processor's last level cache in MiB
+dump_frequency = 5  # Number of benchmarks results to collect before dumping to backup file
+llc_mib        = 36 # Size of the processor's last level cache in MiB
 cl_mb          = 64 # Size of the processor's cache Lines in B
-test_my_version = "ON" # Use my fork of eigen
-cache_vars     = {} # Any other CMake cacheVariables as Pairs, e.g. {CMAKE_C_COMPILER = "gcc", ...}
+test_my_version = "OFF" # Use my fork of eigen
+cache_vars     = {CMAKE_C_COMPILER = "icx", CMAKE_CXX_COMPILER = "icpx"} # Any other CMake cacheVariables as Pairs, e.g. {CMAKE_C_COMPILER = "gcc", ...}
 # Runtime Settings
 extents        = [] # gearshifft extents files (row-wise csv)
 verbose        = false
@@ -21,26 +21,56 @@ complex        = true  # run c2c benchmarks
 precision      = "all" # which precisions to benchmark
                        # (options depend on implementation, typically ("double"|"float"))
 
-[test-fftw]
+# 1D serial outplace benchmarks
+[base-1D-serial-outplace]
 inherits = "base"
-implementation = "fftw"
-extents = ["test.conf"]
-
-[test-eigen-fftw]
 inplace = false
-inherits = "test-fftw"
-implementation = "eigen_fftw"
-
-[test-fftw-outplace-complex-double]
-inherits = "test-fftw"
-inplace = false
-real = false
 precision = "double"
+extents = ["1d.conf"]
 
-[test-eigen-fftw-outplace-complex-double]
-inherits = "test-fftw-outplace-complex-double"
+[base-1D-serial-prime]
+inherits = "base-1D-serial-outplace"
+extents = ["1d_primes.conf"]
+
+[eigen-kissfft]
+inherits = "base-1D-serial-outplace"
+implementation = "eigen_kissfft"
+
+[eigen-kissfft-prime]
+inherits = "base-1D-serial-prime"
+implementation = "eigen_kissfft"
+error_bound = 1e-14 # is too inacurrate for automatic error bounds
+
+[eigen-pocketfft]
+inherits = "base-1D-serial-outplace"
+implementation = "eigen_pocketfft"
+
+[eigen-pocketfft-prime]
+inherits = "base-1D-serial-prime"
+implementation = "eigen_pocketfft"
+
+[eigen-mkl]
+inherits = "base-1D-serial-outplace"
+implementation = "eigen_mkl"
+
+[eigen-mkl-prime]
+inherits = "base-1D-serial-prime"
+implementation = "eigen_mkl"
+
+[eigen-fftw]
+inherits = "base-1D-serial-outplace"
 implementation = "eigen_fftw"
 
-[test-fftw-plan-estimate]
-inherits = "test-fftw"
+[eigen-fftw-prime]
+inherits = "base-1D-serial-prime"
+implementation = "eigen_fftw"
+
+[fftw]
+inherits = "base-1D-serial-outplace"
+implementation = "fftw"
+plan_rigor = "estimate"
+
+[fftw-prime]
+inherits = "base-1D-serial-prime"
+implementation = "fftw"
 plan_rigor = "estimate"

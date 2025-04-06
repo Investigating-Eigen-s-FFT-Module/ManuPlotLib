@@ -2,7 +2,7 @@
 # Basics
 x_scale = "log"                     # Possible values: "log", "linear"
 x_dir   = "normal"                  # Possible values: "normal", "reverse"
-y_scale = "linear"                     # Possible values: "log", "linear"
+y_scale = "log"                     # Possible values: "log", "linear"
 y_dir   = "normal"                  # Possible values: "normal", "reverse"
 x_log_basis = 2
 y_log_basis = 10
@@ -20,6 +20,7 @@ y_values = ["err_L2_norm"] # Which values to plot ("Time_Allocation_ms","Time_Pl
                                                             # "Time_PlanInitInv_ms","Time_Upload_ms","Time_FFT_ms","Time_iFFT_ms",
                                                             # "Time_Download_ms","Time_PlanDestroy_ms","Time_Total_ms",
                                                             # "Error_StandardDeviation", "Error_Mismatches")
+scatter = true
 
 # Data processing
 row_filter = {}         # Filter out rows that contain the value at column key
@@ -33,6 +34,7 @@ x_transform = "none"                      # Optional transform of the x-axis (cu
 y_transform = "none"                      # Optional transform of the measured data on the y-axis
                                           # (currently just 'fft_perf' to compute FFT performance)
 
-[fftwd-vs-kissfftd]
+[double-accuracy-all-prime-complex]
 inherits = "base"
-benchmark_templates = ["test-fftwd", "test-kissfftd"]
+row_filter = {complex = "Complex"}
+benchmark_templates = ["eigen-kissfft-prime", "eigen-pocketfft-prime", "eigen-mkl-prime", "eigen-fftw-prime"]
