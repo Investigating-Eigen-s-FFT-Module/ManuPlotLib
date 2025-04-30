@@ -78,17 +78,32 @@ function create_plot(template::Dict{String,Any}, template_name::String,
         # md_vec contains the corresponding set of csv metadata info from the csv(s)
         
         # First determine unique identifiers based on group column names to build legend labels
-        group_col_entries = DataFrame([name => [] for name in  group_cols])
+        group_col_entries = if isempty(group_cols)
+            # Create an empty DataFrame if group_cols is empty
+            DataFrame()
+        else
+            DataFrame([name => [] for name in group_cols])
+        end
         for df_vec in agg_data_list 
             for df in df_vec
-                append!(group_col_entries, unique(eachrow(df[:, group_cols])))
+                if !isempty(group_cols)
+                    append!(group_col_entries, unique(eachrow(df[:, group_cols])))
+                end
             end
         end
+
         # Next do the same for specified meta data labels
-        meta_data_entries = DataFrame([key => [] for key in meta_data_labels])
+        meta_data_entries = if isempty(meta_data_labels)
+            # Create an empty DataFrame if meta_data_labels is empty
+            DataFrame()
+        else
+            DataFrame([key => [] for key in meta_data_labels])
+        end
         for md_vec in meta_data_list
             for md in md_vec
-                append!(meta_data_entries, DataFrame([key => [get(md, key, nothing)] for key in meta_data_labels]))
+                if !isempty(meta_data_labels)
+                    append!(meta_data_entries, DataFrame([key => [get(md, key, nothing)] for key in meta_data_labels]))
+                end
             end
         end
         
@@ -153,7 +168,12 @@ function create_plot(template::Dict{String,Any}, template_name::String,
         # Run through dfs again and create curves
         for (df_vec, md_vec) in zip(agg_data_list, meta_data_list)
             for (df, md) in zip(df_vec, md_vec)
-                grouped_df = groupby(df, group_cols)
+                grouped_df = if isempty(group_cols)
+                    [df] # single group if group_cols is empty
+                else
+                    groupby(df, group_cols)
+                end
+
                 for gdf in grouped_df
                     x_data = gdf[:, xcol]
                     y_data = gdf[:, ycol]

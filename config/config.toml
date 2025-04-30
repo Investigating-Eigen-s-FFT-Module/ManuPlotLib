@@ -1,5 +1,5 @@
 [paths]
-benchmark_repo_root = ".."                  # root of benchmark repo relative to GearshifftEvaluation root dir
+benchmark_repo_root = "../.."                  # root of benchmark repo relative to GearshifftEvaluation root dir
 output_dir          = "output"              # default place to store program outputs (plots etc.)
 benchmark_templates_path = "benchmark.toml" # location of benchmark templates relative to root/templates
 plot_templates_path = "plot.toml"           # location of plot templates relative to root/templates

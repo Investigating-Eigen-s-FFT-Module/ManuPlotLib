@@ -15,8 +15,8 @@ csv_count_per_benchmark = 1 # Number of CSV files to include for each benchmark 
 group_by_columns =  []      # Which csv columns to group by besides x_values
                             # for aggregation (see output csv for all options)
 meta_data_labels = []       # Which values from the output csv header to add to series labels
-x_values = ["N"]            # Which values to plot against (1D only atm)
-y_values = ["T"]            # Which values to plot
+x_values = ["num_particles"]            # Which values to plot against (1D only atm)
+y_values = ["duration"]            # Which values to plot
 scatter = true              # Scatter or Line Plot
 
 # Data processing
@@ -32,5 +32,6 @@ y_transform = "none"                      # Optional transform of the measured d
                                           # (currently just 'fft_perf' to compute FFT performance)
 
 [test]
+error_bar_method = "std_dev"
 inherits = "base"
 benchmark_templates = ["test"]
