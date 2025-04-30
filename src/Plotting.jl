@@ -203,7 +203,9 @@ function create_plot(template::Dict{String,Any}, template_name::String,
 
                         # Add to axis for this y value
                         push!(ycol_axis, plot)
-                        push!(ycol_axis, LegendEntry(escape_latex_special_chars(group_label)))
+                        if !isempty(group_label)
+                            push!(ycol_axis, LegendEntry(escape_latex_special_chars(group_label)))
+                        end
                     catch e
                         @error "Series creation failed:" e
                         exit(1)
