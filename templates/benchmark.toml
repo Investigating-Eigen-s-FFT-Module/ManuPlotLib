@@ -1,0 +1,16 @@
+[base]
+cmake_inherits = ["default"] # REQUIRED: base preset in <benchmark root>/CMakePresets.json
+# Build Settings - mapping to CMake cache variables in config.toml
+# E.g:
+# double = "ON"
+cache_vars = {} # Any other CMake cacheVariables as Pairs, e.g. {CMAKE_C_COMPILER = "gcc", ...}
+# Runtime Settings
+extents = ["test.conf"]
+warmups = 10
+reps = 10
+
+
+# Base example
+[test]
+inherits = "base"
+implementation = "benchmark"

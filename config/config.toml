@@ -1,0 +1,64 @@
+[paths]
+benchmark_repo_root = ".."                  # root of benchmark repo relative to GearshifftEvaluation root dir
+output_dir          = "output"              # default place to store program outputs (plots etc.)
+benchmark_templates_path = "benchmark.toml" # location of benchmark templates relative to root/templates
+plot_templates_path = "plot.toml"           # location of plot templates relative to root/templates
+cache_dir           = ".cache"              # default place to cache information
+input_file_dirs     = []                    # set of dirs, whose contents should be in the working directory of
+                                            # the benchmark binary. Relative to gearshifft_root
+
+# Defines parameters for injected CMakeUserPresets.json
+# of benchmarking repo. Only relevant if the benchmarking
+# repo doesn't have a CMakeUserPresets.json yet.
+# Should typically match CMakePresets.json parameters.
+[cmake_user_presets]
+"$schema" = "https://raw.githubusercontent.com/Kitware/CMake/refs/tags/v3.31.5/Help/manual/presets/schema.json"
+"version" = 10
+"cmakeMinimumRequired" = {"major" = 3, "minor" = 31, "patch" = 0}
+
+# Mapping from relevant CMake preset cacheVariables
+# of benchmarking repo  to benchmark template keys.
+# (Additional cache vars without any map defined here
+# can always be set with key
+# "cache_vars" in benchmark_templates.toml)
+[build_template_variables]
+# "SOME_CACHE_VAR"    = "value"
+
+# TODO: allow for implementation-specific build_template_variable mappings
+
+# Base mapping from relevant runtime arguments (flags) 
+# of benchmarking repo to benchmark template keys
+# Implementation-specific flags can be set
+# below and inherit from this map
+[base_run_template_variables]
+"-f" = "extents"
+"-w" = "warmups"
+"-r" = "reps"
+
+# Mapping from implementation key
+# to different implementations
+# ! output binaries *relative to* build folder
+[implementations]
+[implementations.benchmark]
+"binary" = "benchmark"
+
+# TODO: make these optional if they just inherit base
+# Usually, all specified implementation
+# runtime args inherit from
+# key `base_run_template_variables`
+[implementations.benchmark.run_template_variables]
+"inherits" = "base_run_template_variables"
+
+# TODO: allow for implementation-specific mappings here too
+# Defines required mappings from `gearshifft-eval` flags
+# to corresponding flags of implementation binaries
+[parse_cli_variables]
+"benchmark_tag" = "-t"
+"output_file" = ">" # can be '>' if implemementation binary
+                    # prints csv to stdout
+
+# If needed, add mapping to custom parsers for certain runtime flags.
+# Custom parsers are defined in CustomParsers.jl
+[custom_flag_parser]
+# e.g:
+# "-r" = "gearshifft_benchmark_string"
