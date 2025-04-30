@@ -12,7 +12,7 @@ y_label = "Cycles"                  # Label for the y-axis
 # Benchmark output selection
 benchmark_templates = []    # List sets of benchmarks to compare, e.g. ["benchA", "benchB"]
 csv_count_per_benchmark = 1 # Number of CSV files to include for each benchmark template (<= 0 for max available)
-group_by_columns =          # Which csv columns to group by besides x_values
+group_by_columns =  []      # Which csv columns to group by besides x_values
                             # for aggregation (see output csv for all options)
 meta_data_labels = []       # Which values from the output csv header to add to series labels
 x_values = ["N"]            # Which values to plot against (1D only atm)
