@@ -71,6 +71,22 @@ function aggregate_data(template::Dict{String,Any}, data::DataFrame)
     grouped_df = groupby(transformed_df, gb_columns)
     agg_results = combine(grouped_df, combinations...)
     sort!(agg_results, x_columns...)
+    
+    # Check for infinite error values and replace with 0 - This can happen when e.g.
+    # only one y value per unique set of x_columns exists (e.g. only one rep per run).
+    if !isnothing(error_method)
+        for ycol in y_columns
+            error_col = ycol * "_" * template["error_bar_method"]
+            if error_col in names(agg_results)
+                infinite_mask = isnan.(agg_results[!, error_col]) .| isinf.(agg_results[!, error_col])
+                if any(infinite_mask)
+                    @warn "Found $(count(infinite_mask)) infinite or NaN error values in column '$error_col'. Setting to 0."
+                    agg_results[infinite_mask, error_col] .= 0
+                end
+            end
+        end
+    end
+    
     return agg_results
 end
 
