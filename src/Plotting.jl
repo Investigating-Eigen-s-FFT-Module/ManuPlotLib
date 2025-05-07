@@ -1,6 +1,7 @@
 using PGFPlotsX
 using ColorSchemes
 using JSON3
+using CSV
 
 escape_latex_special_chars(str::String) = replace(str, r"([%$#&_{}~^\\])" => s"\\\1")
 
@@ -254,9 +255,40 @@ function create_plot(template::Dict{String,Any}, template_name::String,
     @info "Saving output files at:
     '$save_path'"
     mkpath(save_path)
+
+    # Export the aggregated data used for plotting
+    @info "Saving aggregated data as CSV files"
+    for (i, (df_vec, md_vec)) in enumerate(zip(agg_data_list, meta_data_list))
+        benchmark_name = benchmark_template_names[i]
+        for (j, (df, md)) in enumerate(zip(df_vec, md_vec))
+            # Save whole dataframe if no grouping
+            if isempty(group_cols)
+                filename = "$(benchmark_name)_agg_data_$(j).csv"
+                CSV.write(joinpath(save_path, filename), df)
+                @info "Saved aggregated data to $filename"
+            else
+                # Save each grouped dataframe separately
+                grouped_df = groupby(df, group_cols)
+                for (k, gdf) in enumerate(grouped_df)
+                    # Create a descriptive filename based on group values
+                    group_str = join([string(col, "_", gdf[1, col]) for col in group_cols], "_")
+                    filename = "$(benchmark_name)_$(group_str)_agg_data_$(j)_$(k).csv"
+                    # Replace any characters that might cause issues in filenames
+                    filename = replace(filename, r"[^a-zA-Z0-9_\-.]" => "_")
+                    CSV.write(joinpath(save_path, filename), gdf)
+                    @info "Saved grouped aggregated data to $filename"
+                end
+            end
+        end
+    end
+
     # Save the figure
     pgfsave(joinpath(save_path, "$template_name.tex"), td)
-    pgfsave(joinpath(save_path, "$template_name.pdf"), td)
+    # Check if system has lualatex
+    if !isnothing(Sys.which("lualatex"))
+        @info "Compiling tex with lualatex"
+        pgfsave(joinpath(save_path, "$template_name.pdf"), td)
+    end
 
     # Save the metadata to a JSON file
     open(joinpath(save_path, "metadata_$(template_name).json"), "w") do io
