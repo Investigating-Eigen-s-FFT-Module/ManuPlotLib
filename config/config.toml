@@ -4,8 +4,8 @@ output_dir          = "output"              # default place to store program out
 benchmark_templates_path = "benchmark.toml" # location of benchmark templates relative to root/templates
 plot_templates_path = "plot.toml"           # location of plot templates relative to root/templates
 cache_dir           = ".cache"              # default place to cache information
-input_file_dirs     = []                    # set of dirs, whose contents should be in the working directory of
-                                            # the benchmark binary. Relative to gearshifft_root
+input_file_dirs     = ["input"]                    # set of dirs, whose contents should be in the working directory of
+                                            # the benchmark binary. Relative to benchmark_repo_root
 
 # Defines parameters for injected CMakeUserPresets.json
 # of benchmarking repo. Only relevant if the benchmarking
@@ -22,7 +22,9 @@ input_file_dirs     = []                    # set of dirs, whose contents should
 # can always be set with key
 # "cache_vars" in benchmark_templates.toml)
 [build_template_variables]
-# "SOME_CACHE_VAR"    = "value"
+"SIMULATION_PARTICLES"    = "num_particles"
+"SIMULATION_DAYS"    = "days"
+"SIMULATION_TIMESTEP" = "timestep"
 
 # TODO: allow for implementation-specific build_template_variable mappings
 
@@ -39,14 +41,44 @@ input_file_dirs     = []                    # set of dirs, whose contents should
 # to different implementations
 # ! output binaries *relative to* build folder
 [implementations]
-[implementations.benchmark]
-"binary" = "benchmark"
+[implementations.papi_bench]
+"binary" = "papi_bench"
+
+[implementations.runtime_vs_n]
+"binary" = "runtime_vs_n"
+
+[implementations.runtime_vs_t]
+"binary" = "runtime_vs_t"
+
+[implementations.runtime_vs_dt]
+"binary" = "runtime_vs_dt"
+
+[implementations.accuracy_vs_n]
+"binary" = "accuracy_vs_n"
+
+[implementations.accuracy_vs_t]
+"binary" = "accuracy_vs_t"
+
+[implementations.accuracy_vs_dt]
+"binary" = "accuracy_vs_dt"
 
 # TODO: make these optional if they just inherit base
 # Usually, all specified implementation
 # runtime args inherit from
 # key `base_run_template_variables`
-[implementations.benchmark.run_template_variables]
+[implementations.papi_bench.run_template_variables]
+"inherits" = "base_run_template_variables"
+[implementations.runtime_vs_n.run_template_variables]
+"inherits" = "base_run_template_variables"
+[implementations.runtime_vs_t.run_template_variables]
+"inherits" = "base_run_template_variables"
+[implementations.runtime_vs_dt.run_template_variables]
+"inherits" = "base_run_template_variables"
+[implementations.accuracy_vs_n.run_template_variables]
+"inherits" = "base_run_template_variables"
+[implementations.accuracy_vs_t.run_template_variables]
+"inherits" = "base_run_template_variables"
+[implementations.accuracy_vs_dt.run_template_variables]
 "inherits" = "base_run_template_variables"
 
 # TODO: allow for implementation-specific mappings here too
