@@ -23,7 +23,7 @@ input_file_dirs     = ["input"]                    # set of dirs, whose contents
 # "cache_vars" in benchmark_templates.toml)
 [build_template_variables]
 "SIMULATION_PARTICLES"    = "num_particles"
-"SIMULATION_DAYS"    = "days"
+"SIMULATION_STEPS"    = "steps"
 "SIMULATION_TIMESTEP" = "timestep"
 
 # TODO: allow for implementation-specific build_template_variable mappings
