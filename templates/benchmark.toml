@@ -1,20 +1,22 @@
 [base]
-cmake_inherits = ["default"] # REQUIRED: base preset in <benchmark root>/CMakePresets.json
+cmake_inherits = ["intel"] # REQUIRED: base preset in <benchmark root>/CMakePresets.json
 # Build Settings - mapping to CMake cache variables in config.toml
 # Same as corresponding CMake defaults, currently ManuPlotLib
 # doesn't allow optional build keys
-num_particles = 1024
-days = 2
-timestep = 86400
+num_particles = 1000
+steps = 100
+timestep = 1
 # E.g:
 # double = "ON"
 cache_vars = {} # Any other CMake cacheVariables as Pairs, e.g. {CMAKE_C_COMPILER = "gcc", ...}
 # Runtime Settings
-extents = ["input/extents_test.conf"]
+extents = ["input/extents_particles.conf"]
 warmups = 1
 reps = 1
 
-# Basic example
+# Strong scaling vs number of particles
 [runtime_vs_n]
 inherits = "base"
+warmups = 10
+reps = 100
 implementation = "runtime_vs_n"
