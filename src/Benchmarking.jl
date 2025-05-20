@@ -135,7 +135,7 @@ function run_benchmark(template::Dict, name::String, build_hash::String, tag=not
         cli_vars["output_file"], output_csv
     ]
 
-    command = Cmd(`sh -c $(join(args, " "))`)
+    command = Cmd(`taskset -c 0 sh -c $(join(args, " "))`)
 
     @info "Command: $command"
     run_command_from_path(command, log_file, bin_path)
